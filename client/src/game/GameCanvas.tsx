@@ -1,14 +1,15 @@
 import { Canvas } from '@react-three/fiber';
 import { Sky } from '@react-three/drei';
-import * as THREE from 'three';
 import { useCallback, useState } from 'react';
 import BulletTracer, { type BulletTracerItem } from './BulletTracer';
+import HealthPickups from './HealthPickups';
 import HUD from './HUD';
 import ImpactEffect, { type ImpactEffectItem } from './ImpactEffect';
-import Map from './Map';
+import PlayerAvatar from './PlayerAvatar';
 import PlayerController from './PlayerController';
 import WeaponModel from './WeaponModel';
-import type { ClientMessage, PlayerState, RoomSnapshot } from './types';
+import GameMap from './maps/GameMap';
+import type { ClientMessage, RoomSnapshot } from './types';
 
 type Props = {
   playerId: string;
@@ -22,7 +23,14 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
   const me = snapshot.players.find((player) => player.id === playerId);
   const [tracers, setTracers] = useState<BulletTracerItem[]>([]);
   const [impacts, setImpacts] = useState<ImpactEffectItem[]>([]);
-  const [weaponView, setWeaponView] = useState({ ads: false, recoil: 0, firing: false, moving: false, shotPulse: 0 });
+  const [weaponView, setWeaponView] = useState({
+    ads: false,
+    recoil: 0,
+    firing: false,
+    moving: false,
+    crouching: false,
+    shotPulse: 0
+  });
 
   const addShotVisual = useCallback((tracer: Omit<BulletTracerItem, 'id' | 'createdAt'>, impact: Omit<ImpactEffectItem, 'id' | 'createdAt'>) => {
     const now = performance.now();
@@ -43,10 +51,11 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
         <ambientLight intensity={0.45} />
         <directionalLight castShadow position={[10, 18, 8]} intensity={1.5} shadow-mapSize={[2048, 2048]} />
         <Sky sunPosition={[20, 12, 10]} />
-        <Map />
+        <GameMap activeMapId={snapshot.activeMapId} />
         {snapshot.players.map((player) =>
-          player.id === playerId ? null : <RemotePlayer key={player.id} player={player} />
+          player.id === playerId ? null : <PlayerAvatar key={player.id} player={player} serverTime={snapshot.serverTime} />
         )}
+        <HealthPickups pickups={snapshot.healthPickups} serverTime={snapshot.serverTime} />
         <BulletTracer tracers={tracers} />
         <ImpactEffect impacts={impacts} />
         <WeaponModel
@@ -54,6 +63,7 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
           ads={weaponView.ads}
           recoil={weaponView.recoil}
           moving={weaponView.moving}
+          crouching={weaponView.crouching}
           firing={weaponView.firing}
           reloading={Boolean(me.reloadingUntil)}
           shotPulse={weaponView.shotPulse}
@@ -61,6 +71,7 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
         <PlayerController
           player={me}
           snapshot={snapshot}
+          activeMapId={snapshot.activeMapId}
           send={send}
           onScoreboard={onScoreboard}
           onWeaponViewChange={setWeaponView}
@@ -70,41 +81,5 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
       <HUD snapshot={snapshot} player={me} scoreboardOpen={scoreboardOpen} />
       <div className="lock-hint">Click viewport to lock mouse</div>
     </main>
-  );
-}
-
-function RemotePlayer({ player }: { player: PlayerState }) {
-  const color = player.alive ? '#c9554c' : '#2f3434';
-  return (
-    <group position={[player.position.x, player.position.y, player.position.z]} rotation={[0, player.rotationY, 0]}>
-      <mesh castShadow position={[0, 0.8, 0]}>
-        <capsuleGeometry args={[0.42, 0.9, 6, 12]} />
-        <meshStandardMaterial color={color} transparent opacity={player.alive ? 1 : 0.35} />
-      </mesh>
-      <mesh castShadow position={[0, 1.55, -0.2]}>
-        <boxGeometry args={[0.28, 0.18, 0.7]} />
-        <meshStandardMaterial color="#242827" />
-      </mesh>
-      <BillboardText text={`${player.name} ${player.hp}`} position={[0, 2.1, 0]} />
-    </group>
-  );
-}
-
-function BillboardText({ text, position }: { text: string; position: [number, number, number] }) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 64;
-  const context = canvas.getContext('2d')!;
-  context.fillStyle = 'rgba(0,0,0,0.6)';
-  context.fillRect(0, 0, 256, 64);
-  context.fillStyle = '#ffffff';
-  context.font = '24px sans-serif';
-  context.textAlign = 'center';
-  context.fillText(text, 128, 40);
-  const texture = new THREE.CanvasTexture(canvas);
-  return (
-    <sprite position={position} scale={[2.3, 0.58, 1]}>
-      <spriteMaterial map={texture} />
-    </sprite>
   );
 }

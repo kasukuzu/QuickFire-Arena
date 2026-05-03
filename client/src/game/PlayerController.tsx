@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { warehouseCollisionBoxes, warehouseWalkableSurfaces } from './Map';
 import { useWeaponSystem } from './WeaponSystem';
 import { getMuzzleWorldPosition } from './WeaponModel';
+import { MAPS } from './maps/mapDefinitions';
 import { WEAPONS } from './weapons';
-import type { ClientMessage, PlayerState, RoomSnapshot, Vec3 } from './types';
+import type { ClientMessage, MapId, PlayerState, RoomSnapshot, Vec3 } from './types';
 
 type Props = {
   player: PlayerState;
   snapshot: RoomSnapshot;
+  activeMapId: MapId;
   send: (message: ClientMessage) => void;
   onScoreboard: (open: boolean) => void;
-  onWeaponViewChange: (state: { ads: boolean; recoil: number; firing: boolean; moving: boolean; shotPulse: number }) => void;
+  onWeaponViewChange: (state: { ads: boolean; recoil: number; firing: boolean; moving: boolean; crouching: boolean; shotPulse: number }) => void;
   onShotVisual: (
     tracer: { from: Vec3; to: Vec3 },
     impact: { position: Vec3; kind: 'world' | 'hit' }
@@ -22,8 +23,14 @@ type Props = {
 const keys = new Set<string>();
 const PLAYER_RADIUS = 0.45;
 const GROUND_Y = 1;
+const STAND_CAMERA_HEIGHT = 1.6;
+const CROUCH_CAMERA_HEIGHT = 1.02;
+const STAND_PLAYER_HEIGHT = 1.8;
+const CROUCH_PLAYER_HEIGHT = 1.22;
+const CROUCH_LERP_SPEED = 10;
+const CROUCH_SPEED_MULTIPLIER = 0.65;
 
-export default function PlayerController({ player, snapshot, send, onScoreboard, onWeaponViewChange, onShotVisual }: Props) {
+export default function PlayerController({ player, snapshot, activeMapId, send, onScoreboard, onWeaponViewChange, onShotVisual }: Props) {
   const { camera, gl } = useThree();
   const fpsCamera = camera as THREE.PerspectiveCamera;
   const yaw = useRef(player.rotationY);
@@ -32,8 +39,11 @@ export default function PlayerController({ player, snapshot, send, onScoreboard,
   const velocityY = useRef(0);
   const lastInputAt = useRef(0);
   const movingRef = useRef(false);
+  const cameraHeight = useRef(STAND_CAMERA_HEIGHT);
+  const playerHeight = useRef(STAND_PLAYER_HEIGHT);
   const weaponSystem = useWeaponSystem();
   const playerRef = useRef(player);
+  const previousAlive = useRef(player.alive);
   const sendRef = useRef(send);
   const weaponSystemRef = useRef(weaponSystem);
   const fireRef = useRef<() => void>(() => undefined);
@@ -108,15 +118,35 @@ export default function PlayerController({ player, snapshot, send, onScoreboard,
     if (!player.alive) {
       position.current.set(player.position.x, player.position.y, player.position.z);
     }
-  }, [player.alive, player.position.x, player.position.y, player.position.z]);
+    if (!previousAlive.current && player.alive) {
+      position.current.set(player.position.x, player.position.y, player.position.z);
+      yaw.current = player.rotationY;
+      pitch.current = player.pitch;
+      velocityY.current = 0;
+      weaponSystem.stopAds();
+      weaponSystem.stopFire();
+      cameraHeight.current = STAND_CAMERA_HEIGHT;
+      playerHeight.current = STAND_PLAYER_HEIGHT;
+    }
+    previousAlive.current = player.alive;
+  }, [player.alive, player.position.x, player.position.y, player.position.z, player.rotationY, player.pitch, weaponSystem]);
 
   useFrame((_, delta) => {
     weaponSystem.updateRecoil(delta);
+    const crouchRequested = keys.has('ShiftLeft') || keys.has('ShiftRight');
+    const canStand = !hasHeadBlock(position.current, playerHeight.current, activeMapId);
+    const crouching = crouchRequested || !canStand;
+    const targetCameraHeight = crouching ? CROUCH_CAMERA_HEIGHT : STAND_CAMERA_HEIGHT;
+    const targetPlayerHeight = crouching ? CROUCH_PLAYER_HEIGHT : STAND_PLAYER_HEIGHT;
+    cameraHeight.current = THREE.MathUtils.lerp(cameraHeight.current, targetCameraHeight, Math.min(1, delta * CROUCH_LERP_SPEED));
+    playerHeight.current = THREE.MathUtils.lerp(playerHeight.current, targetPlayerHeight, Math.min(1, delta * CROUCH_LERP_SPEED));
+
     onWeaponViewChange({
       ads: weaponSystem.ads,
       recoil: weaponSystem.recoil,
       firing: weaponSystem.firing,
       moving: movingRef.current,
+      crouching,
       shotPulse: weaponSystem.shotPulse
     });
 
@@ -124,33 +154,52 @@ export default function PlayerController({ player, snapshot, send, onScoreboard,
     fpsCamera.updateProjectionMatrix();
 
     if (!player.alive || snapshot.state !== 'playing') {
-      camera.position.set(player.position.x, player.position.y + 1.6, player.position.z);
+      camera.position.set(player.position.x, player.position.y + cameraHeight.current, player.position.z);
       return;
     }
 
     weaponSystem.updateAutomaticFire(player.weaponId, canShoot(), fire);
 
-    const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 3.0 : player.weaponId === 'smg' ? 7.2 : 6.3;
+    const baseSpeed = player.weaponId === 'smg' ? 7.2 : 6.3;
+    const speed = baseSpeed * (crouching ? CROUCH_SPEED_MULTIPLIER : 1);
     const forward = Number(keys.has('KeyW')) - Number(keys.has('KeyS'));
     const strafe = Number(keys.has('KeyD')) - Number(keys.has('KeyA'));
     direction.set(strafe, 0, -forward);
     movingRef.current = direction.lengthSq() > 0;
+    const horizontalMove = new THREE.Vector3();
     if (direction.lengthSq() > 0) {
       direction.normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw.current);
-      const nextPosition = position.current.clone().addScaledVector(direction, speed * delta);
-      position.current.copy(resolveHorizontalCollision(nextPosition));
+      horizontalMove.copy(direction).multiplyScalar(speed * delta);
     }
 
-    if (keys.has('Space') && isGrounded(position.current)) {
+    if (keys.has('Space') && isGrounded(position.current, activeMapId)) {
       velocityY.current = 6.5;
     }
-    const previousY = position.current.y;
     velocityY.current -= 16 * delta;
-    position.current.y += velocityY.current * delta;
-    const landingY = getLandingY(position.current, previousY);
-    if (position.current.y <= landingY) {
-      position.current.y = landingY;
-      velocityY.current = 0;
+    const verticalMove = velocityY.current * delta;
+    const steps = Math.max(1, Math.ceil(Math.max(horizontalMove.length(), Math.abs(verticalMove)) / 0.22));
+
+    for (let step = 0; step < steps; step += 1) {
+      const previousY = position.current.y;
+      const nextHorizontal = position.current.clone().addScaledVector(horizontalMove, 1 / steps);
+      position.current.copy(resolveHorizontalCollision(nextHorizontal, playerHeight.current, activeMapId));
+      position.current.y += verticalMove / steps;
+
+      if (verticalMove > 0) {
+        const ceilingY = getCeilingY(position.current, previousY, playerHeight.current, activeMapId);
+        if (ceilingY !== null) {
+          position.current.y = ceilingY;
+          velocityY.current = 0;
+          break;
+        }
+      }
+
+      const landingY = getLandingY(position.current, previousY, activeMapId);
+      if (position.current.y <= landingY) {
+        position.current.y = landingY;
+        velocityY.current = 0;
+        break;
+      }
     }
 
     position.current.x = THREE.MathUtils.clamp(position.current.x, -17.5, 17.5);
@@ -158,7 +207,7 @@ export default function PlayerController({ player, snapshot, send, onScoreboard,
 
     euler.set(pitch.current, yaw.current, 0);
     camera.quaternion.setFromEuler(euler);
-    camera.position.set(position.current.x, position.current.y + (keys.has('ShiftLeft') ? 0.85 : 1.55), position.current.z);
+    camera.position.set(position.current.x, position.current.y + cameraHeight.current, position.current.z);
 
     const now = performance.now();
     if (now - lastInputAt.current > 50) {
@@ -167,20 +216,27 @@ export default function PlayerController({ player, snapshot, send, onScoreboard,
         type: 'input',
         position: toVec3(position.current),
         rotationY: yaw.current,
-        pitch: pitch.current
+        pitch: pitch.current,
+        crouching
       });
     }
   });
 
   function canShoot() {
-    return snapshot.state === 'playing' && player.alive && player.ammo > 0 && !player.reloadingUntil;
+    return (
+      snapshot.state === 'playing' &&
+      player.alive &&
+      player.ammo > 0 &&
+      !player.reloadingUntil &&
+      !(player.invincibleUntil && player.invincibleUntil > snapshot.serverTime)
+    );
   }
 
   function fire() {
     if (!canShoot()) return;
     const shotDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).normalize();
     const origin = camera.position.clone();
-    const visualHit = getVisualHit(origin, shotDirection, snapshot.players, player.id, weapon.range);
+    const visualHit = getVisualHit(origin, shotDirection, snapshot.players, player.id, weapon.range, activeMapId);
     const muzzle = getMuzzleWorldPosition(camera, player.weaponId, weaponSystem.ads);
     onShotVisual(
       { from: toVec3(muzzle), to: toVec3(visualHit.point) },
@@ -203,7 +259,8 @@ function getVisualHit(
   direction: THREE.Vector3,
   players: PlayerState[],
   localPlayerId: string,
-  range: number
+  range: number,
+  activeMapId: MapId
 ) {
   let nearestDistance = range;
   let point = origin.clone().addScaledVector(direction, range);
@@ -219,7 +276,7 @@ function getVisualHit(
     }
   }
 
-  for (const box of warehouseCollisionBoxes) {
+  for (const box of MAPS[activeMapId].collisionBoxes) {
     const hitDistance = rayBoxHit(origin, direction, box.position, box.size);
     if (hitDistance !== null && hitDistance < nearestDistance) {
       nearestDistance = hitDistance;
@@ -239,7 +296,8 @@ function getVisualHit(
 }
 
 function rayPlayerHit(origin: THREE.Vector3, direction: THREE.Vector3, player: PlayerState) {
-  const center = new THREE.Vector3(player.position.x, player.position.y + 0.8, player.position.z);
+  const targetHeight = player.crouching ? CROUCH_PLAYER_HEIGHT : STAND_PLAYER_HEIGHT;
+  const center = new THREE.Vector3(player.position.x, player.position.y + targetHeight * 0.45, player.position.z);
   const toTarget = center.clone().sub(origin);
   const projection = toTarget.dot(direction);
   if (projection < 0) return null;
@@ -282,31 +340,71 @@ function toVec3(v: THREE.Vector3): Vec3 {
   return { x: v.x, y: v.y, z: v.z };
 }
 
-function isGrounded(position: THREE.Vector3) {
-  return Math.abs(position.y - getLandingY(position, position.y + 0.05)) < 0.06;
+function isGrounded(position: THREE.Vector3, activeMapId: MapId) {
+  return Math.abs(position.y - getLandingY(position, position.y + 0.05, activeMapId)) < 0.06;
 }
 
-function getLandingY(position: THREE.Vector3, previousY: number) {
+function getLandingY(position: THREE.Vector3, previousY: number, activeMapId: MapId) {
   let landingY = GROUND_Y;
   if (position.y > previousY) return landingY;
 
-  for (const surface of warehouseWalkableSurfaces) {
+  for (const surface of [...MAPS[activeMapId].walkableSurfaces, ...MAPS[activeMapId].collisionBoxes]) {
     const top = surface.position[1] + surface.size[1] * 0.5 + GROUND_Y;
-    const wasAbove = previousY >= top - 0.08;
-    const insideX = Math.abs(position.x - surface.position[0]) <= surface.size[0] * 0.5 + PLAYER_RADIUS;
-    const insideZ = Math.abs(position.z - surface.position[2]) <= surface.size[2] * 0.5 + PLAYER_RADIUS;
-    if (wasAbove && insideX && insideZ && top > landingY) landingY = top;
+    const height = surface.size[1];
+    const wasAbove = previousY >= top - 0.04;
+    const crossedTop = position.y <= top + 0.04;
+    const isReasonableStep = height <= 3.2 || MAPS[activeMapId].walkableSurfaces.some((walkable) => walkable.id === surface.id);
+    const insideX = Math.abs(position.x - surface.position[0]) <= surface.size[0] * 0.5 + PLAYER_RADIUS * 0.8;
+    const insideZ = Math.abs(position.z - surface.position[2]) <= surface.size[2] * 0.5 + PLAYER_RADIUS * 0.8;
+    if (isReasonableStep && wasAbove && crossedTop && insideX && insideZ && top > landingY) landingY = top;
   }
 
   return landingY;
 }
 
-function resolveHorizontalCollision(nextPosition: THREE.Vector3) {
-  const resolved = nextPosition.clone();
+function getCeilingY(position: THREE.Vector3, previousY: number, currentHeight: number, activeMapId: MapId) {
+  const previousHeadY = previousY + currentHeight;
+  const currentHeadY = position.y + currentHeight;
 
-  for (const box of warehouseCollisionBoxes) {
-    const top = box.position[1] + box.size[1] * 0.5 + GROUND_Y;
-    if (resolved.y >= top - 0.05) continue;
+  for (const box of MAPS[activeMapId].collisionBoxes) {
+    const bottom = box.position[1] - box.size[1] * 0.5;
+    const crossedBottom = previousHeadY <= bottom + 0.03 && currentHeadY >= bottom - 0.03;
+    const insideX = Math.abs(position.x - box.position[0]) <= box.size[0] * 0.5 + PLAYER_RADIUS * 0.75;
+    const insideZ = Math.abs(position.z - box.position[2]) <= box.size[2] * 0.5 + PLAYER_RADIUS * 0.75;
+    if (crossedBottom && insideX && insideZ) return bottom - currentHeight - 0.03;
+  }
+
+  return null;
+}
+
+function hasHeadBlock(position: THREE.Vector3, currentHeight: number, activeMapId: MapId) {
+  const standTop = position.y + STAND_PLAYER_HEIGHT;
+  const currentTop = position.y + currentHeight;
+
+  for (const box of MAPS[activeMapId].collisionBoxes) {
+    const halfX = box.size[0] * 0.5 + PLAYER_RADIUS;
+    const halfZ = box.size[2] * 0.5 + PLAYER_RADIUS;
+    const dx = Math.abs(position.x - box.position[0]);
+    const dz = Math.abs(position.z - box.position[2]);
+    if (dx >= halfX || dz >= halfZ) continue;
+
+    const bottom = box.position[1] - box.size[1] * 0.5;
+    const top = box.position[1] + box.size[1] * 0.5;
+    if (bottom < standTop && top > currentTop + 0.05) return true;
+  }
+
+  return false;
+}
+
+function resolveHorizontalCollision(nextPosition: THREE.Vector3, currentPlayerHeight: number, activeMapId: MapId) {
+  const resolved = nextPosition.clone();
+  const playerBottom = resolved.y;
+  const playerTop = resolved.y + currentPlayerHeight;
+
+  for (const box of MAPS[activeMapId].collisionBoxes) {
+    const bottom = box.position[1] - box.size[1] * 0.5;
+    const top = box.position[1] + box.size[1] * 0.5;
+    if (playerBottom >= top - 0.05 || playerTop <= bottom + 0.05) continue;
 
     const halfX = box.size[0] * 0.5 + PLAYER_RADIUS;
     const halfZ = box.size[2] * 0.5 + PLAYER_RADIUS;

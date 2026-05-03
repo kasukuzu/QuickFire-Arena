@@ -3,7 +3,7 @@ import GameCanvas from './game/GameCanvas';
 import LobbyScreen from './game/LobbyScreen';
 import ResultScreen from './game/ResultScreen';
 import { weaponList } from './game/WeaponSystem';
-import type { ClientMessage, RoomSnapshot, ServerMessage, WeaponId } from './game/types';
+import type { ClientMessage, MapSelectionId, RoomSnapshot, ServerMessage, WeaponId } from './game/types';
 
 const WS_URL = import.meta.env.VITE_WS_URL ?? 'ws://localhost:2567';
 
@@ -62,6 +62,7 @@ export default function App() {
           setSelectedWeapon(weaponId);
           send({ type: 'selectWeapon', weaponId });
         }}
+        onSelectMap={(mapId: MapSelectionId) => send({ type: 'mapSelect', mapId })}
         onStart={() => send({ type: 'startMatch' })}
       />
     );

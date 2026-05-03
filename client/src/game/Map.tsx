@@ -16,24 +16,32 @@ type LightItem = {
 
 export type CollisionBox = Pick<BoxItem, 'id' | 'position' | 'size'>;
 
+const CEILING_Y = 8;
+const WALL_HEIGHT = 8;
+const WALL_CENTER_Y = WALL_HEIGHT / 2;
+
 export const warehouseRespawns: Vec3Tuple[] = [
-  [-15, 1, -14],
-  [15, 1, -14],
-  [-15, 1, 14],
-  [15, 1, 14],
-  [-4, 1, -16],
-  [4, 1, 16],
-  [-17, 1, 3],
-  [17, 1, -3]
+  [-16, 1, -15],
+  [16, 1, -15],
+  [-16, 1, 15],
+  [16, 1, 15],
+  [-7, 1, -16],
+  [7, 1, 16],
+  [-17, 1, 6],
+  [17, 1, -6]
 ];
 
 const walls: BoxItem[] = [
-  { id: 'north-wall', position: [0, 2.6, -19], size: [38, 5.2, 1], color: '#3d4240' },
-  { id: 'south-wall', position: [0, 2.6, 19], size: [38, 5.2, 1], color: '#3d4240' },
-  { id: 'west-wall', position: [-19, 2.6, 0], size: [1, 5.2, 38], color: '#393f3e' },
-  { id: 'east-wall', position: [19, 2.6, 0], size: [1, 5.2, 38], color: '#393f3e' },
-  { id: 'north-inner-office', position: [-9, 1.8, -11.5], size: [8, 3.6, 0.55], color: '#464b49' },
-  { id: 'south-inner-office', position: [9, 1.8, 11.5], size: [8, 3.6, 0.55], color: '#464b49' }
+  { id: 'north-wall', position: [0, WALL_CENTER_Y, -19], size: [38, WALL_HEIGHT, 1], color: '#3d4240' },
+  { id: 'south-wall', position: [0, WALL_CENTER_Y, 19], size: [38, WALL_HEIGHT, 1], color: '#3d4240' },
+  { id: 'west-wall', position: [-19, WALL_CENTER_Y, 0], size: [1, WALL_HEIGHT, 38], color: '#393f3e' },
+  { id: 'east-wall', position: [19, WALL_CENTER_Y, 0], size: [1, WALL_HEIGHT, 38], color: '#393f3e' },
+  { id: 'north-inner-office', position: [-9, 2.2, -11.5], size: [8, 4.4, 0.55], color: '#464b49' },
+  { id: 'south-inner-office', position: [9, 2.2, 11.5], size: [8, 4.4, 0.55], color: '#464b49' },
+  { id: 'north-left-column', position: [-16.5, 3.4, -16.5], size: [0.9, 6.8, 0.9], color: '#343938' },
+  { id: 'north-right-column', position: [16.5, 3.4, -16.5], size: [0.9, 6.8, 0.9], color: '#343938' },
+  { id: 'south-left-column', position: [-16.5, 3.4, 16.5], size: [0.9, 6.8, 0.9], color: '#343938' },
+  { id: 'south-right-column', position: [16.5, 3.4, 16.5], size: [0.9, 6.8, 0.9], color: '#343938' }
 ];
 
 const containers: BoxItem[] = [
@@ -52,7 +60,11 @@ const crates: BoxItem[] = [
   { id: 'spawn-cover-sw', position: [-13.6, 0.85, 12.4], size: [2.3, 1.7, 1.5], color: '#806341' },
   { id: 'spawn-cover-se', position: [13.8, 0.85, 12.1], size: [2.3, 1.7, 1.5], color: '#806341' },
   { id: 'north-spawn-cover', position: [-4, 0.7, -13.7], size: [3, 1.4, 1], color: '#755a38' },
-  { id: 'south-spawn-cover', position: [4, 0.7, 13.7], size: [3, 1.4, 1], color: '#755a38' }
+  { id: 'south-spawn-cover', position: [4, 0.7, 13.7], size: [3, 1.4, 1], color: '#755a38' },
+  { id: 'warehouse-baffle-north-west', position: [-7.2, 1.2, -14.1], size: [4.2, 2.4, 0.65], color: '#69533a' },
+  { id: 'warehouse-baffle-south-east', position: [7.2, 1.2, 14.1], size: [4.2, 2.4, 0.65], color: '#69533a' },
+  { id: 'warehouse-baffle-west', position: [-15.7, 1.2, 6], size: [0.65, 2.4, 3.8], color: '#69533a' },
+  { id: 'warehouse-baffle-east', position: [15.7, 1.2, -6], size: [0.65, 2.4, 3.8], color: '#69533a' }
 ];
 
 const shelves: BoxItem[] = [
@@ -127,17 +139,17 @@ const warningStripes: BoxItem[] = [
 ];
 
 const overheadLights: LightItem[] = [
-  { id: 'light-center', position: [0, 4.55, 0], color: '#dbe6df', intensity: 1.45 },
-  { id: 'light-north', position: [0, 4.55, -10.5], color: '#dbe6df', intensity: 1.2 },
-  { id: 'light-south', position: [0, 4.55, 10.5], color: '#dbe6df', intensity: 1.2 },
-  { id: 'light-west', position: [-12.5, 4.4, 0], color: '#cfd9d4', intensity: 0.85 },
-  { id: 'light-east', position: [12.5, 4.4, 0], color: '#cfd9d4', intensity: 0.85 }
+  { id: 'light-center', position: [0, 7.25, 0], color: '#dbe6df', intensity: 1.65 },
+  { id: 'light-north', position: [0, 7.25, -10.5], color: '#dbe6df', intensity: 1.35 },
+  { id: 'light-south', position: [0, 7.25, 10.5], color: '#dbe6df', intensity: 1.35 },
+  { id: 'light-west', position: [-12.5, 7.05, 0], color: '#cfd9d4', intensity: 1 },
+  { id: 'light-east', position: [12.5, 7.05, 0], color: '#cfd9d4', intensity: 1 }
 ];
 
 const emergencyLights: LightItem[] = [
-  { id: 'red-nw', position: [-18.2, 3.2, -15.6], color: '#ff3b32', intensity: 0.8 },
-  { id: 'red-se', position: [18.2, 3.2, 15.6], color: '#ff3b32', intensity: 0.8 },
-  { id: 'red-loading', position: [0, 3.1, -18.3], color: '#ff4a3d', intensity: 0.55 }
+  { id: 'red-nw', position: [-18.2, 5.8, -15.6], color: '#ff3b32', intensity: 0.8 },
+  { id: 'red-se', position: [18.2, 5.8, 15.6], color: '#ff3b32', intensity: 0.8 },
+  { id: 'red-loading', position: [0, 5.65, -18.3], color: '#ff4a3d', intensity: 0.55 }
 ];
 
 export default function Map() {
@@ -183,7 +195,7 @@ function Floor() {
 
 function Ceiling() {
   return (
-    <mesh receiveShadow position={[0, 5.25, 0]}>
+    <mesh receiveShadow position={[0, CEILING_Y, 0]}>
       <boxGeometry args={[38, 0.35, 38]} />
       <meshStandardMaterial color="#303635" roughness={0.88} />
     </mesh>
@@ -193,11 +205,17 @@ function Ceiling() {
 function PipesAndDucts() {
   return (
     <group>
-      <Box id="main-duct" position={[0, 4.75, -4.2]} size={[21, 0.38, 0.72]} color="#596163" />
-      <Box id="side-duct" position={[-8.5, 4.65, 5.5]} size={[0.58, 0.4, 17]} color="#596163" />
-      <Box id="pipe-a" position={[6.5, 4.82, 8]} size={[0.28, 0.28, 18]} color="#6d7472" />
-      <Box id="pipe-b" position={[8, 4.82, 8]} size={[0.22, 0.22, 18]} color="#707773" />
-      <Box id="pipe-c" position={[-13.5, 4.65, 0]} size={[0.22, 0.22, 28]} color="#707773" />
+      <Box id="main-duct" position={[0, 7.35, -4.2]} size={[22, 0.46, 0.86]} color="#596163" />
+      <Box id="side-duct" position={[-8.5, 7.15, 5.5]} size={[0.72, 0.48, 18]} color="#596163" />
+      <Box id="cross-beam-north" position={[0, 6.85, -12.4]} size={[35, 0.45, 0.5]} color="#3a4140" />
+      <Box id="cross-beam-center" position={[0, 6.8, 0]} size={[35, 0.45, 0.5]} color="#3a4140" />
+      <Box id="cross-beam-south" position={[0, 6.85, 12.4]} size={[35, 0.45, 0.5]} color="#3a4140" />
+      <Box id="pipe-a" position={[6.5, 7.45, 8]} size={[0.28, 0.28, 20]} color="#6d7472" />
+      <Box id="pipe-b" position={[8, 7.45, 8]} size={[0.22, 0.22, 20]} color="#707773" />
+      <Box id="pipe-c" position={[-13.5, 7.1, 0]} size={[0.24, 0.24, 30]} color="#707773" />
+      <Box id="hanging-cable-a" position={[-4.2, 6.65, -10.5]} size={[0.08, 1.15, 0.08]} color="#252b2a" />
+      <Box id="hanging-cable-b" position={[4.2, 6.65, 10.5]} size={[0.08, 1.15, 0.08]} color="#252b2a" />
+      <Box id="hanging-cable-c" position={[12.5, 6.45, 0]} size={[0.08, 1.25, 0.08]} color="#252b2a" />
     </group>
   );
 }
@@ -253,6 +271,7 @@ function Lights() {
             <boxGeometry args={[3.2, 0.08, 0.28]} />
             <meshStandardMaterial color="#edf5ed" emissive="#dbe6df" emissiveIntensity={1.2} />
           </mesh>
+          <Box id={`${light.id}-hanger`} position={[light.position[0], light.position[1] + 0.55, light.position[2]]} size={[0.08, 1.1, 0.08]} color="#2b302f" />
         </group>
       ))}
       {emergencyLights.map((light) => (

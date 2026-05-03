@@ -1,4 +1,5 @@
 import { WEAPONS } from './WeaponSystem';
+import { getActiveMapName } from './maps/mapDefinitions';
 import type { PlayerState, RoomSnapshot } from './types';
 
 type Props = {
@@ -13,12 +14,14 @@ export default function HUD({ snapshot, player, scoreboardOpen }: Props) {
   const seconds = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
   const weapon = WEAPONS[player.weaponId];
   const respawnMs = player.respawnAt ? Math.max(0, player.respawnAt - snapshot.serverTime) : 0;
+  const invincibleMs = player.invincibleUntil ? Math.max(0, player.invincibleUntil - snapshot.serverTime) : 0;
   const ranking = [...snapshot.players].sort((a, b) => b.kills - a.kills || a.deaths - b.deaths);
 
   return (
     <div className="hud">
       <div className="topbar">
         <span>{minutes}:{seconds}</span>
+        <span>{getActiveMapName(snapshot.activeMapId)}</span>
         <span>{player.kills} K / {player.deaths} D</span>
       </div>
       <div className="crosshair" />
@@ -28,6 +31,9 @@ export default function HUD({ snapshot, player, scoreboardOpen }: Props) {
       </div>
       {!player.alive ? (
         <div className="respawn">Respawn in {Math.ceil(respawnMs / 1000)}s</div>
+      ) : null}
+      {player.alive && invincibleMs > 0 ? (
+        <div className="respawn invincible">無敵中 {(invincibleMs / 1000).toFixed(1)}</div>
       ) : null}
       {scoreboardOpen ? (
         <div className="scoreboard">

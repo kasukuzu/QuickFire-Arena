@@ -1,3 +1,4 @@
+import { getActiveMapName } from './maps/mapDefinitions';
 import type { RoomSnapshot } from './types';
 
 type Props = {
@@ -14,6 +15,7 @@ export default function ResultScreen({ snapshot, onLeave }: Props) {
       <section className="panel result-panel">
         <p className="eyebrow">Result</p>
         <h1>Winner: {winner?.name ?? 'No contest'}</h1>
+        <p className="muted">Map: {getActiveMapName(snapshot.activeMapId)}</p>
         <table>
           <thead>
             <tr>

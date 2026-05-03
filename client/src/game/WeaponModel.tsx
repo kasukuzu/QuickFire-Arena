@@ -9,6 +9,7 @@ type Props = {
   ads: boolean;
   recoil: number;
   moving: boolean;
+  crouching: boolean;
   firing: boolean;
   reloading: boolean;
   shotPulse: number;
@@ -22,7 +23,7 @@ export function getMuzzleWorldPosition(camera: THREE.Camera, weaponId: WeaponId,
   return offset.applyQuaternion(camera.quaternion).add(camera.position);
 }
 
-export default function WeaponModel({ weaponId, ads, recoil, moving, firing, reloading, shotPulse }: Props) {
+export default function WeaponModel({ weaponId, ads, recoil, moving, crouching, firing, reloading, shotPulse }: Props) {
   const groupRef = useRef<THREE.Group>(null);
   const flashRef = useRef<THREE.Mesh>(null);
   const { camera } = useThree();
@@ -38,7 +39,7 @@ export default function WeaponModel({ weaponId, ads, recoil, moving, firing, rel
     currentOffset.lerp(target, 0.22);
     const local = currentOffset
       .clone()
-      .add(new THREE.Vector3(0, bob - recoil * 0.08 + (reloading ? -0.08 : 0), recoil * 0.16));
+      .add(new THREE.Vector3(0, bob - recoil * 0.08 + (reloading ? -0.08 : 0) + (crouching ? -0.035 : 0), recoil * 0.16));
     group.position.copy(camera.position).add(local.applyQuaternion(camera.quaternion));
     group.quaternion.copy(camera.quaternion);
     group.rotateX(-recoil * 0.08);

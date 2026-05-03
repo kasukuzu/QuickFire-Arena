@@ -1,14 +1,16 @@
 import { WEAPONS, weaponList } from './WeaponSystem';
-import type { RoomSnapshot, WeaponId } from './types';
+import { MAP_SELECTIONS, getMapName } from './maps/mapDefinitions';
+import type { MapSelectionId, RoomSnapshot, WeaponId } from './types';
 
 type Props = {
   snapshot: RoomSnapshot;
   playerId: string;
   onSelectWeapon: (weaponId: WeaponId) => void;
+  onSelectMap: (mapId: MapSelectionId) => void;
   onStart: () => void;
 };
 
-export default function LobbyScreen({ snapshot, playerId, onSelectWeapon, onStart }: Props) {
+export default function LobbyScreen({ snapshot, playerId, onSelectWeapon, onSelectMap, onStart }: Props) {
   const me = snapshot.players.find((player) => player.id === playerId);
   const canStart = me?.isHost && snapshot.players.length >= 2;
 
@@ -51,6 +53,29 @@ export default function LobbyScreen({ snapshot, playerId, onSelectWeapon, onStar
                 </button>
               ))}
             </div>
+          </section>
+
+          <section>
+            <h2>Map</h2>
+            {me?.isHost ? (
+              <div className="weapon-list">
+                {MAP_SELECTIONS.map((map) => (
+                  <button
+                    className={snapshot.selectedMapId === map.id ? 'weapon-card active' : 'weapon-card'}
+                    key={map.id}
+                    onClick={() => onSelectMap(map.id)}
+                  >
+                    <strong>{map.name}</strong>
+                    <span>{map.description}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="player-row">
+                <span>Selected Map</span>
+                <span>{getMapName(snapshot.selectedMapId)}</span>
+              </div>
+            )}
           </section>
         </div>
 

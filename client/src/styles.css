@@ -283,6 +283,11 @@ td {
   font-weight: 800;
 }
 
+.respawn.invincible {
+  top: 64%;
+  color: #bceeff;
+}
+
 .scoreboard {
   position: absolute;
   left: 50%;
