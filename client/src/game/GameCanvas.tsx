@@ -1,9 +1,13 @@
 import { Canvas } from '@react-three/fiber';
 import { Sky } from '@react-three/drei';
 import * as THREE from 'three';
+import { useCallback, useState } from 'react';
+import BulletTracer, { type BulletTracerItem } from './BulletTracer';
 import HUD from './HUD';
+import ImpactEffect, { type ImpactEffectItem } from './ImpactEffect';
 import Map from './Map';
 import PlayerController from './PlayerController';
+import WeaponModel from './WeaponModel';
 import type { ClientMessage, PlayerState, RoomSnapshot } from './types';
 
 type Props = {
@@ -16,6 +20,20 @@ type Props = {
 
 export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, onScoreboard }: Props) {
   const me = snapshot.players.find((player) => player.id === playerId);
+  const [tracers, setTracers] = useState<BulletTracerItem[]>([]);
+  const [impacts, setImpacts] = useState<ImpactEffectItem[]>([]);
+  const [weaponView, setWeaponView] = useState({ ads: false, recoil: 0, firing: false, moving: false, shotPulse: 0 });
+
+  const addShotVisual = useCallback((tracer: Omit<BulletTracerItem, 'id' | 'createdAt'>, impact: Omit<ImpactEffectItem, 'id' | 'createdAt'>) => {
+    const now = performance.now();
+    const tracerItem = { ...tracer, id: now + Math.random(), createdAt: now };
+    const impactItem = { ...impact, id: now + Math.random() + 1, createdAt: now };
+    setTracers((current) => [...current, tracerItem]);
+    setImpacts((current) => [...current, impactItem]);
+    window.setTimeout(() => setTracers((current) => current.filter((item) => item.id !== tracerItem.id)), 90);
+    window.setTimeout(() => setImpacts((current) => current.filter((item) => item.id !== impactItem.id)), 220);
+  }, []);
+
   if (!me) return null;
 
   return (
@@ -29,8 +47,25 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
         {snapshot.players.map((player) =>
           player.id === playerId ? null : <RemotePlayer key={player.id} player={player} />
         )}
-        <WeaponView player={me} />
-        <PlayerController player={me} snapshot={snapshot} send={send} onScoreboard={onScoreboard} />
+        <BulletTracer tracers={tracers} />
+        <ImpactEffect impacts={impacts} />
+        <WeaponModel
+          weaponId={me.weaponId}
+          ads={weaponView.ads}
+          recoil={weaponView.recoil}
+          moving={weaponView.moving}
+          firing={weaponView.firing}
+          reloading={Boolean(me.reloadingUntil)}
+          shotPulse={weaponView.shotPulse}
+        />
+        <PlayerController
+          player={me}
+          snapshot={snapshot}
+          send={send}
+          onScoreboard={onScoreboard}
+          onWeaponViewChange={setWeaponView}
+          onShotVisual={addShotVisual}
+        />
       </Canvas>
       <HUD snapshot={snapshot} player={me} scoreboardOpen={scoreboardOpen} />
       <div className="lock-hint">Click viewport to lock mouse</div>
@@ -51,18 +86,6 @@ function RemotePlayer({ player }: { player: PlayerState }) {
         <meshStandardMaterial color="#242827" />
       </mesh>
       <BillboardText text={`${player.name} ${player.hp}`} position={[0, 2.1, 0]} />
-    </group>
-  );
-}
-
-function WeaponView({ player }: { player: PlayerState }) {
-  const size: [number, number, number] = player.weaponId === 'sr' ? [0.16, 0.16, 1.3] : [0.22, 0.18, 0.85];
-  return (
-    <group position={[0.35, -0.25, -0.75]}>
-      <mesh>
-        <boxGeometry args={size} />
-        <meshStandardMaterial color={player.weaponId === 'smg' ? '#343d45' : '#303030'} />
-      </mesh>
     </group>
   );
 }

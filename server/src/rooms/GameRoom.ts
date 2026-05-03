@@ -9,14 +9,14 @@ const PLAYER_RADIUS = 0.55;
 const PLAYER_HEIGHT = 1.8;
 
 const SPAWNS: Vec3[] = [
-  { x: -13, y: 1, z: -13 },
-  { x: 13, y: 1, z: -13 },
-  { x: -13, y: 1, z: 13 },
-  { x: 13, y: 1, z: 13 },
-  { x: 0, y: 1, z: -15 },
-  { x: 0, y: 1, z: 15 },
-  { x: -15, y: 1, z: 0 },
-  { x: 15, y: 1, z: 0 }
+  { x: -15, y: 1, z: -14 },
+  { x: 15, y: 1, z: -14 },
+  { x: -15, y: 1, z: 14 },
+  { x: 15, y: 1, z: 14 },
+  { x: -4, y: 1, z: -16 },
+  { x: 4, y: 1, z: 16 },
+  { x: -17, y: 1, z: 3 },
+  { x: 17, y: 1, z: -3 }
 ];
 
 type Client = {
@@ -134,7 +134,7 @@ export class GameRoom {
     }
 
     if (message.type === 'shoot') {
-      this.shoot(playerId, message.origin, normalize(message.direction));
+      this.shoot(playerId, message.origin, normalize(message.direction), message.hitPlayerId);
     }
   }
 
@@ -198,7 +198,7 @@ export class GameRoom {
     player.reloadingUntil = Date.now() + weapon.reloadMs;
   }
 
-  private shoot(playerId: string, origin: Vec3, direction: Vec3) {
+  private shoot(playerId: string, origin: Vec3, direction: Vec3, claimedHitPlayerId?: string | null) {
     const shooter = this.players.get(playerId);
     const client = this.clients.get(playerId);
     if (!shooter || !client || !shooter.alive || shooter.reloadingUntil) return;
@@ -220,7 +220,8 @@ export class GameRoom {
       }
     }
 
-    if (!bestTarget) return;
+    if (!bestTarget || claimedHitPlayerId === null) return;
+    if (claimedHitPlayerId && bestTarget.id !== claimedHitPlayerId) return;
     bestTarget.hp = Math.max(0, bestTarget.hp - weapon.damage);
     if (bestTarget.hp <= 0) {
       bestTarget.alive = false;

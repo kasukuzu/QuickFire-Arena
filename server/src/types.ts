@@ -41,7 +41,7 @@ export type ClientMessage =
   | { type: 'selectWeapon'; weaponId: WeaponId }
   | { type: 'startMatch' }
   | { type: 'input'; position: Vec3; rotationY: number; pitch: number }
-  | { type: 'shoot'; origin: Vec3; direction: Vec3 }
+  | { type: 'shoot'; origin: Vec3; direction: Vec3; hitPlayerId?: string | null; impactPoint?: Vec3 }
   | { type: 'reload' };
 
 export type ServerMessage =
