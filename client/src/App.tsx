@@ -1,6 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import GameCanvas from './game/GameCanvas';
-import LobbyScreen from './game/LobbyScreen';
+import CountdownScreen from './screens/CountdownScreen';
+import LobbyScreen from './screens/LobbyScreen';
+import MapSelectedScreen from './screens/MapSelectedScreen';
+import MapRouletteScreen from './screens/MapRouletteScreen';
 import ResultScreen from './game/ResultScreen';
 import { weaponList } from './game/WeaponSystem';
 import type { ClientMessage, MapSelectionId, RoomSnapshot, ServerMessage, WeaponId } from './game/types';
@@ -60,12 +63,25 @@ export default function App() {
         playerId={playerId}
         onSelectWeapon={(weaponId) => {
           setSelectedWeapon(weaponId);
-          send({ type: 'selectWeapon', weaponId });
+          send({ type: 'weaponSelect', weaponId });
         }}
-        onSelectMap={(mapId: MapSelectionId) => send({ type: 'mapSelect', mapId })}
-        onStart={() => send({ type: 'startMatch' })}
+        onSelectMap={(mapId: MapSelectionId) => send({ type: 'mapVoteSelect', mapId })}
+        onToggleReady={() => send({ type: 'readyToggle' })}
+        onStart={() => send({ type: 'startGame' })}
       />
     );
+  }
+
+  if (connected && snapshot?.state === 'roulette') {
+    return <MapRouletteScreen snapshot={snapshot} />;
+  }
+
+  if (connected && snapshot?.state === 'map_selected') {
+    return <MapSelectedScreen snapshot={snapshot} />;
+  }
+
+  if (connected && snapshot?.state === 'countdown') {
+    return <CountdownScreen snapshot={snapshot} />;
   }
 
   if (connected && snapshot?.state === 'playing') {

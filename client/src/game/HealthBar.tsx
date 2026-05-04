@@ -13,7 +13,11 @@ export default function HealthBar({ hp, y = 2.2 }: Props) {
   const color = ratio <= 0.2 ? '#e14436' : ratio <= 0.5 ? '#d6bc36' : '#42c45a';
 
   useFrame(({ camera }) => {
-    groupRef.current?.quaternion.copy(camera.quaternion);
+    if (!groupRef.current) return;
+    groupRef.current.quaternion.copy(camera.quaternion);
+    const distance = groupRef.current.getWorldPosition(new THREE.Vector3()).distanceTo(camera.position);
+    const scale = THREE.MathUtils.clamp(distance / 14, 0.85, 1.35);
+    groupRef.current.scale.setScalar(scale);
   });
 
   if (hp <= 0) return null;

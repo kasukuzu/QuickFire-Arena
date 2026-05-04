@@ -5,7 +5,8 @@ import { useWeaponSystem } from './WeaponSystem';
 import { getMuzzleWorldPosition } from './WeaponModel';
 import { MAPS } from './maps/mapDefinitions';
 import { WEAPONS } from './weapons';
-import type { ClientMessage, MapId, PlayerState, RoomSnapshot, Vec3 } from './types';
+import { PLAYER_HITBOXES } from './hitboxes';
+import type { ClientMessage, HitPart, MapId, PlayerState, RoomSnapshot, Vec3 } from './types';
 
 type Props = {
   player: PlayerState;
@@ -247,6 +248,7 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
       origin: toVec3(origin),
       direction: toVec3(shotDirection),
       hitPlayerId: visualHit.playerId ?? null,
+      hitPart: visualHit.hitPart ?? null,
       impactPoint: toVec3(visualHit.point)
     });
   }
@@ -265,14 +267,16 @@ function getVisualHit(
   let nearestDistance = range;
   let point = origin.clone().addScaledVector(direction, range);
   let playerId: string | undefined;
+  let hitPart: HitPart | undefined;
 
   for (const player of players) {
     if (player.id === localPlayerId || !player.alive) continue;
-    const hitDistance = rayPlayerHit(origin, direction, player);
-    if (hitDistance !== null && hitDistance < nearestDistance) {
-      nearestDistance = hitDistance;
-      point = origin.clone().addScaledVector(direction, hitDistance);
+    const hit = rayPlayerHit(origin, direction, player);
+    if (hit && hit.distance < nearestDistance) {
+      nearestDistance = hit.distance;
+      point = origin.clone().addScaledVector(direction, hit.distance);
       playerId = player.id;
+      hitPart = hit.hitPart;
     }
   }
 
@@ -282,6 +286,7 @@ function getVisualHit(
       nearestDistance = hitDistance;
       point = origin.clone().addScaledVector(direction, hitDistance);
       playerId = undefined;
+      hitPart = undefined;
     }
   }
 
@@ -290,19 +295,35 @@ function getVisualHit(
     nearestDistance = floorDistance;
     point = origin.clone().addScaledVector(direction, floorDistance);
     playerId = undefined;
+    hitPart = undefined;
   }
 
-  return { point, playerId };
+  return { point, playerId, hitPart };
 }
 
 function rayPlayerHit(origin: THREE.Vector3, direction: THREE.Vector3, player: PlayerState) {
-  const targetHeight = player.crouching ? CROUCH_PLAYER_HEIGHT : STAND_PLAYER_HEIGHT;
-  const center = new THREE.Vector3(player.position.x, player.position.y + targetHeight * 0.45, player.position.z);
-  const toTarget = center.clone().sub(origin);
-  const projection = toTarget.dot(direction);
-  if (projection < 0) return null;
-  const closest = origin.clone().addScaledVector(direction, projection);
-  return closest.distanceTo(center) <= 0.58 ? projection : null;
+  const scaleY = player.crouching ? CROUCH_PLAYER_HEIGHT / STAND_PLAYER_HEIGHT : 1;
+  const inverseYaw = -player.rotationY;
+  const localOrigin = origin.clone().sub(new THREE.Vector3(player.position.x, player.position.y, player.position.z));
+  localOrigin.applyAxisAngle(new THREE.Vector3(0, 1, 0), inverseYaw);
+  localOrigin.y /= scaleY;
+  const localDirection = direction.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), inverseYaw);
+  localDirection.y /= scaleY;
+  localDirection.normalize();
+
+  let best: { distance: number; hitPart: HitPart } | null = null;
+  for (const hitbox of PLAYER_HITBOXES) {
+    const hitDistance = rayBoxHit(localOrigin, localDirection, hitbox.position, hitbox.size);
+    if (hitDistance !== null && (!best || hitDistance < best.distance)) {
+      const localPoint = localOrigin.clone().addScaledVector(localDirection, hitDistance);
+      localPoint.y *= scaleY;
+      const worldPoint = localPoint
+        .applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotationY)
+        .add(new THREE.Vector3(player.position.x, player.position.y, player.position.z));
+      best = { distance: worldPoint.distanceTo(origin), hitPart: hitbox.hitPart };
+    }
+  }
+  return best;
 }
 
 function rayBoxHit(origin: THREE.Vector3, direction: THREE.Vector3, position: [number, number, number], size: [number, number, number]) {

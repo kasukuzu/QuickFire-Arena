@@ -1,7 +1,8 @@
 import type WebSocket from 'ws';
+import { HIT_PART_DAMAGE_MULTIPLIER, PLAYER_HITBOXES } from '../hitboxes.js';
 import { getSpawns, isMapSelectionId, resolveActiveMapId } from '../maps.js';
 import { WEAPONS } from '../weapons.js';
-import type { ClientMessage, HealthPickupState, MapId, MapSelectionId, PlayerState, RoomSnapshot, ServerMessage, Vec3, WeaponId } from '../types.js';
+import type { ClientMessage, HealthPickupState, HitPart, MapId, MapSelectionId, PlayerState, RoomSnapshot, ServerMessage, Vec3, WeaponId } from '../types.js';
 
 const MATCH_MS = 5 * 60 * 1000;
 const MAX_PLAYERS = 8;
@@ -9,7 +10,8 @@ const RESPAWN_MS = 5000;
 const INVINCIBLE_MS = 2000;
 const HEALTH_PICKUP_MS = 7000;
 const HEALTH_PICKUP_RADIUS = 1.2;
-const PLAYER_RADIUS = 0.55;
+const MAP_SELECTED_MS = 2000;
+const COUNTDOWN_MS = 3500;
 const PLAYER_STAND_HEIGHT = 1.8;
 const PLAYER_CROUCH_HEIGHT = 1.22;
 
@@ -25,6 +27,13 @@ export class GameRoom {
   state: RoomSnapshot['state'] = 'lobby';
   selectedMapId: MapSelectionId = 'warehouse';
   activeMapId: MapId = 'warehouse';
+  rouletteCandidates: MapSelectionId[] = [];
+  rouletteResult: MapSelectionId | null = null;
+  rouletteStartedAt: number | null = null;
+  rouletteEndsAt: number | null = null;
+  mapSelectedAt: number | null = null;
+  countdownStartedAt: number | null = null;
+  matchStartedAt: number | null = null;
   hostId = '';
   matchEndsAt: number | null = null;
   winnerId: string | null = null;
@@ -64,6 +73,8 @@ export class GameRoom {
       name: name.trim().slice(0, 18) || `Player ${this.players.size + 1}`,
       isHost,
       weaponId: weapon.id,
+      mapVote: null,
+      isReady: false,
       characterId: 0,
       position: toVec3(spawn),
       rotationY: spawn.rotationY,
@@ -107,23 +118,32 @@ export class GameRoom {
     const player = this.players.get(playerId);
     if (!player) return;
 
-    if (message.type === 'selectWeapon' && this.state === 'lobby') {
+    if ((message.type === 'selectWeapon' || message.type === 'weaponSelect') && this.state === 'lobby') {
       player.weaponId = message.weaponId;
       player.ammo = WEAPONS[message.weaponId].magazineSize;
+      player.isReady = false;
       this.broadcast();
       return;
     }
 
-    if (message.type === 'mapSelect' && this.state === 'lobby') {
-      if (playerId !== this.hostId || !isMapSelectionId(message.mapId)) return;
-      this.selectedMapId = message.mapId;
+    if ((message.type === 'mapSelect' || message.type === 'mapVoteSelect') && this.state === 'lobby') {
+      if (!isMapSelectionId(message.mapId)) return;
+      player.mapVote = message.mapId;
+      player.isReady = false;
       this.broadcast();
       return;
     }
 
-    if (message.type === 'startMatch') {
-      if (playerId !== this.hostId || this.players.size < 2 || this.state !== 'lobby') return;
-      this.start();
+    if (message.type === 'readyToggle' && this.state === 'lobby') {
+      if (!player.weaponId || !player.mapVote) return;
+      player.isReady = !player.isReady;
+      this.broadcast();
+      return;
+    }
+
+    if (message.type === 'startMatch' || message.type === 'startGame') {
+      if (playerId !== this.hostId || !this.canStart()) return;
+      this.startRoulette();
       return;
     }
 
@@ -143,7 +163,7 @@ export class GameRoom {
     }
 
     if (message.type === 'shoot') {
-      this.shoot(playerId, message.origin, normalize(message.direction), message.hitPlayerId);
+      this.shoot(playerId, message.origin, normalize(message.direction), message.hitPlayerId, message.hitPart);
     }
   }
 
@@ -153,6 +173,13 @@ export class GameRoom {
       state: this.state,
       selectedMapId: this.selectedMapId,
       activeMapId: this.activeMapId,
+      rouletteCandidates: this.rouletteCandidates,
+      rouletteResult: this.rouletteResult,
+      rouletteStartedAt: this.rouletteStartedAt,
+      rouletteEndsAt: this.rouletteEndsAt,
+      mapSelectedAt: this.mapSelectedAt,
+      countdownStartedAt: this.countdownStartedAt,
+      matchStartedAt: this.matchStartedAt,
       hostId: this.hostId,
       players: [...this.players.values()],
       healthPickups: [...this.healthPickups.values()],
@@ -163,12 +190,51 @@ export class GameRoom {
     };
   }
 
-  private start() {
-    this.state = 'playing';
-    this.activeMapId = resolveActiveMapId(this.selectedMapId);
-    this.matchEndsAt = Date.now() + MATCH_MS;
+  private canStart() {
+    return this.state === 'lobby' && this.players.size >= 2 && [...this.players.values()].every((player) => player.isReady && player.mapVote);
+  }
+
+  private startRoulette() {
+    const now = Date.now();
+    const candidates = [...this.players.values()].map((player) => player.mapVote).filter((mapId): mapId is MapSelectionId => Boolean(mapId));
+    const result = candidates[Math.floor(Math.random() * candidates.length)] ?? 'warehouse';
+
+    this.state = 'roulette';
+    this.rouletteCandidates = candidates.length > 0 ? candidates : ['warehouse'];
+    this.rouletteResult = result;
+    this.selectedMapId = result;
+    this.activeMapId = result === 'random' ? resolveActiveMapId('random') : result;
+    this.rouletteStartedAt = now;
+    this.rouletteEndsAt = now + (result === 'random' ? 4400 : 3400);
+    this.mapSelectedAt = null;
+    this.countdownStartedAt = null;
+    this.matchStartedAt = null;
+    this.winnerId = null;
+    this.broadcast();
+
+    setTimeout(() => {
+      if (this.state !== 'roulette') return;
+      this.showMapSelected();
+    }, this.rouletteEndsAt - now);
+  }
+
+  private showMapSelected() {
+    this.state = 'map_selected';
+    this.mapSelectedAt = Date.now();
+    this.broadcast();
+    setTimeout(() => {
+      if (this.state !== 'map_selected') return;
+      this.startCountdown();
+    }, MAP_SELECTED_MS);
+  }
+
+  private startCountdown() {
+    this.state = 'countdown';
+    this.countdownStartedAt = Date.now();
     this.winnerId = null;
     this.healthPickups.clear();
+    this.rouletteStartedAt = null;
+    this.rouletteEndsAt = null;
     let index = 0;
     const characterIds = shuffle([0, 1, 2, 3, 4, 5, 6, 7]);
     const spawns = getSpawns(this.activeMapId);
@@ -185,11 +251,24 @@ export class GameRoom {
         deaths: 0,
         alive: true,
         crouching: false,
+        isReady: false,
         invincibleUntil: null,
         respawnAt: null,
         reloadingUntil: null
       });
     }
+    this.broadcast();
+    setTimeout(() => {
+      if (this.state !== 'countdown') return;
+      this.startPlaying();
+    }, COUNTDOWN_MS);
+  }
+
+  private startPlaying() {
+    const now = Date.now();
+    this.state = 'playing';
+    this.matchStartedAt = now;
+    this.matchEndsAt = now + MATCH_MS;
     this.broadcast();
   }
 
@@ -226,7 +305,7 @@ export class GameRoom {
     player.reloadingUntil = Date.now() + weapon.reloadMs;
   }
 
-  private shoot(playerId: string, origin: Vec3, direction: Vec3, claimedHitPlayerId?: string | null) {
+  private shoot(playerId: string, origin: Vec3, direction: Vec3, claimedHitPlayerId?: string | null, claimedHitPart?: HitPart | null) {
     const shooter = this.players.get(playerId);
     const client = this.clients.get(playerId);
     const now = Date.now();
@@ -238,23 +317,26 @@ export class GameRoom {
 
     let bestTarget: PlayerState | null = null;
     let bestDistance = Number.POSITIVE_INFINITY;
+    let bestHitPart: HitPart | null = null;
     for (const target of this.players.values()) {
       if (target.id === playerId || !target.alive) continue;
-      const hit = rayCapsuleHit(
+      const hit = rayPlayerHitboxesHit(
         origin,
         direction,
-        target.position,
-        target.crouching ? PLAYER_CROUCH_HEIGHT : PLAYER_STAND_HEIGHT
+        target
       );
-      if (hit !== null && hit < bestDistance && hit <= weapon.range) {
+      if (hit !== null && hit.distance < bestDistance && hit.distance <= weapon.range) {
         bestTarget = target;
-        bestDistance = hit;
+        bestDistance = hit.distance;
+        bestHitPart = hit.hitPart;
       }
     }
 
     if (!bestTarget || claimedHitPlayerId === null || isInvincible(bestTarget, now)) return;
     if (claimedHitPlayerId && bestTarget.id !== claimedHitPlayerId) return;
-    bestTarget.hp = Math.max(0, bestTarget.hp - weapon.damage);
+    const multiplier = bestHitPart ? HIT_PART_DAMAGE_MULTIPLIER[bestHitPart] : 1;
+    const damage = Math.round(weapon.damage * multiplier);
+    bestTarget.hp = Math.max(0, bestTarget.hp - damage);
     if (bestTarget.hp <= 0) {
       bestTarget.alive = false;
       bestTarget.deaths += 1;
@@ -377,17 +459,77 @@ function normalize(v: Vec3): Vec3 {
   return { x: v.x / length, y: v.y / length, z: v.z / length };
 }
 
-function rayCapsuleHit(origin: Vec3, direction: Vec3, targetPosition: Vec3, targetHeight = PLAYER_STAND_HEIGHT) {
-  const center = { x: targetPosition.x, y: targetPosition.y + targetHeight * 0.45, z: targetPosition.z };
-  const toTarget = { x: center.x - origin.x, y: center.y - origin.y, z: center.z - origin.z };
-  const projection = toTarget.x * direction.x + toTarget.y * direction.y + toTarget.z * direction.z;
-  if (projection < 0) return null;
+function rayPlayerHitboxesHit(origin: Vec3, direction: Vec3, target: PlayerState) {
+  const scaleY = target.crouching ? PLAYER_CROUCH_HEIGHT / PLAYER_STAND_HEIGHT : 1;
+  const localOrigin = rotateY(
+    {
+      x: origin.x - target.position.x,
+      y: (origin.y - target.position.y) / scaleY,
+      z: origin.z - target.position.z
+    },
+    -target.rotationY
+  );
+  const localDirection = normalize(
+    rotateY(
+      {
+        x: direction.x,
+        y: direction.y / scaleY,
+        z: direction.z
+      },
+      -target.rotationY
+    )
+  );
 
-  const closest = {
-    x: origin.x + direction.x * projection,
-    y: origin.y + direction.y * projection,
-    z: origin.z + direction.z * projection
+  let best: { distance: number; hitPart: HitPart } | null = null;
+  for (const hitbox of PLAYER_HITBOXES) {
+    const hitDistance = rayBoxHit(localOrigin, localDirection, hitbox.position, hitbox.size);
+    if (hitDistance === null) continue;
+    const localPoint = {
+      x: localOrigin.x + localDirection.x * hitDistance,
+      y: (localOrigin.y + localDirection.y * hitDistance) * scaleY,
+      z: localOrigin.z + localDirection.z * hitDistance
+    };
+    const rotatedPoint = rotateY(localPoint, target.rotationY);
+    const worldPoint = {
+      x: rotatedPoint.x + target.position.x,
+      y: rotatedPoint.y + target.position.y,
+      z: rotatedPoint.z + target.position.z
+    };
+    const worldDistance = Math.hypot(worldPoint.x - origin.x, worldPoint.y - origin.y, worldPoint.z - origin.z);
+    if (!best || worldDistance < best.distance) best = { distance: worldDistance, hitPart: hitbox.hitPart };
+  }
+  return best;
+}
+
+function rayBoxHit(origin: Vec3, direction: Vec3, position: Vec3, size: Vec3) {
+  const min = { x: position.x - size.x * 0.5, y: position.y - size.y * 0.5, z: position.z - size.z * 0.5 };
+  const max = { x: position.x + size.x * 0.5, y: position.y + size.y * 0.5, z: position.z + size.z * 0.5 };
+  let tMin = 0;
+  let tMax = Number.POSITIVE_INFINITY;
+
+  for (const axis of ['x', 'y', 'z'] as const) {
+    if (Math.abs(direction[axis]) < 0.0001) {
+      if (origin[axis] < min[axis] || origin[axis] > max[axis]) return null;
+      continue;
+    }
+    const inv = 1 / direction[axis];
+    let t1 = (min[axis] - origin[axis]) * inv;
+    let t2 = (max[axis] - origin[axis]) * inv;
+    if (t1 > t2) [t1, t2] = [t2, t1];
+    tMin = Math.max(tMin, t1);
+    tMax = Math.min(tMax, t2);
+    if (tMin > tMax) return null;
+  }
+
+  return tMin >= 0 ? tMin : null;
+}
+
+function rotateY(v: Vec3, angle: number): Vec3 {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return {
+    x: v.x * cos - v.z * sin,
+    y: v.y,
+    z: v.x * sin + v.z * cos
   };
-  const distance = Math.hypot(closest.x - center.x, closest.y - center.y, closest.z - center.z);
-  return distance <= PLAYER_RADIUS ? projection : null;
 }

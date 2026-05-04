@@ -1,7 +1,8 @@
-export type GameState = 'lobby' | 'playing' | 'result';
+export type GameState = 'lobby' | 'roulette' | 'map_selected' | 'countdown' | 'playing' | 'result';
 export type WeaponId = 'ar' | 'smg' | 'sr';
 export type MapId = 'warehouse' | 'factory' | 'rooftop';
 export type MapSelectionId = MapId | 'random';
+export type HitPart = 'head' | 'body' | 'arm' | 'leg';
 
 export type Vec3 = {
   x: number;
@@ -14,6 +15,8 @@ export type PlayerState = {
   name: string;
   isHost: boolean;
   weaponId: WeaponId;
+  mapVote: MapSelectionId | null;
+  isReady: boolean;
   characterId: number;
   position: Vec3;
   rotationY: number;
@@ -43,6 +46,13 @@ export type RoomSnapshot = {
   state: GameState;
   selectedMapId: MapSelectionId;
   activeMapId: MapId;
+  rouletteCandidates: MapSelectionId[];
+  rouletteResult: MapSelectionId | null;
+  rouletteStartedAt: number | null;
+  rouletteEndsAt: number | null;
+  mapSelectedAt: number | null;
+  countdownStartedAt: number | null;
+  matchStartedAt: number | null;
   hostId: string;
   players: PlayerState[];
   healthPickups: HealthPickupState[];
@@ -56,10 +66,14 @@ export type ClientMessage =
   | { type: 'createRoom'; name: string; weaponId: WeaponId }
   | { type: 'joinRoom'; roomId: string; name: string; weaponId: WeaponId }
   | { type: 'selectWeapon'; weaponId: WeaponId }
+  | { type: 'weaponSelect'; weaponId: WeaponId }
   | { type: 'mapSelect'; mapId: MapSelectionId }
+  | { type: 'mapVoteSelect'; mapId: MapSelectionId }
+  | { type: 'readyToggle' }
   | { type: 'startMatch' }
+  | { type: 'startGame' }
   | { type: 'input'; position: Vec3; rotationY: number; pitch: number; crouching?: boolean }
-  | { type: 'shoot'; origin: Vec3; direction: Vec3; hitPlayerId?: string | null; impactPoint?: Vec3 }
+  | { type: 'shoot'; origin: Vec3; direction: Vec3; hitPlayerId?: string | null; hitPart?: HitPart | null; impactPoint?: Vec3 }
   | { type: 'reload' };
 
 export type ServerMessage =

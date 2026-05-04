@@ -64,7 +64,7 @@ export default function WeaponModel({ weaponId, ads, recoil, moving, crouching, 
   });
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} userData={{ type: 'weaponModel' }}>
       {weaponId === 'ar' ? <ARModel /> : weaponId === 'smg' ? <SMGModel /> : <SRModel />}
       <mesh ref={flashRef} position={getMuzzleLocalOffset(weaponId).toArray()} visible={false}>
         <sphereGeometry args={[0.08, 8, 8]} />
@@ -114,7 +114,7 @@ function SRModel() {
 
 function GunBox({ position, size, color }: { position: [number, number, number]; size: [number, number, number]; color: string }) {
   return (
-    <mesh castShadow position={position}>
+    <mesh castShadow position={position} userData={{ type: 'weaponModel' }}>
       <boxGeometry args={size} />
       <meshStandardMaterial color={color} roughness={0.65} metalness={0.25} />
     </mesh>
