@@ -22,7 +22,7 @@ type Props = {
 
 const keys = new Set<string>();
 const PLAYER_RADIUS = 0.45;
-const GROUND_Y = 1;
+const GROUND_Y = 0;
 const STAND_CAMERA_HEIGHT = 1.6;
 const CROUCH_CAMERA_HEIGHT = 1.02;
 const STAND_PLAYER_HEIGHT = 1.8;
@@ -349,7 +349,7 @@ function getLandingY(position: THREE.Vector3, previousY: number, activeMapId: Ma
   if (position.y > previousY) return landingY;
 
   for (const surface of [...MAPS[activeMapId].walkableSurfaces, ...MAPS[activeMapId].collisionBoxes]) {
-    const top = surface.position[1] + surface.size[1] * 0.5 + GROUND_Y;
+    const top = surface.position[1] + surface.size[1] * 0.5;
     const height = surface.size[1];
     const wasAbove = previousY >= top - 0.04;
     const crossedTop = position.y <= top + 0.04;

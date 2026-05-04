@@ -20,42 +20,42 @@ export const MAPS: Record<MapId, ServerMapDefinition> = {
     id: 'warehouse',
     name: '地下倉庫',
     spawns: [
-      { x: -16, y: 1, z: -15, rotationY: Math.PI * 0.25 },
-      { x: 16, y: 1, z: -15, rotationY: -Math.PI * 0.25 },
-      { x: -16, y: 1, z: 15, rotationY: Math.PI * 0.75 },
-      { x: 16, y: 1, z: 15, rotationY: -Math.PI * 0.75 },
-      { x: -7, y: 1, z: -16, rotationY: Math.PI * 0.1 },
-      { x: 7, y: 1, z: 16, rotationY: -Math.PI * 0.9 },
-      { x: -17, y: 1, z: 6, rotationY: Math.PI * 0.55 },
-      { x: 17, y: 1, z: -6, rotationY: -Math.PI * 0.45 }
+      { x: -16, y: 0, z: -15, rotationY: Math.PI * 0.25 },
+      { x: 16, y: 0, z: -15, rotationY: -Math.PI * 0.25 },
+      { x: -16, y: 0, z: 15, rotationY: Math.PI * 0.75 },
+      { x: 16, y: 0, z: 15, rotationY: -Math.PI * 0.75 },
+      { x: -7, y: 0, z: -16, rotationY: Math.PI * 0.1 },
+      { x: 7, y: 0, z: 16, rotationY: -Math.PI * 0.9 },
+      { x: -17, y: 0, z: 6, rotationY: Math.PI * 0.55 },
+      { x: 17, y: 0, z: -6, rotationY: -Math.PI * 0.45 }
     ]
   },
   factory: {
     id: 'factory',
     name: '廃工場',
     spawns: [
-      { x: -16, y: 1, z: -14, rotationY: Math.PI * 0.2 },
-      { x: 16, y: 1, z: -14, rotationY: -Math.PI * 0.2 },
-      { x: -16, y: 1, z: 14, rotationY: Math.PI * 0.8 },
-      { x: 16, y: 1, z: 14, rotationY: -Math.PI * 0.8 },
-      { x: -7, y: 1, z: -16, rotationY: Math.PI * 0.05 },
-      { x: 7, y: 1, z: 16, rotationY: -Math.PI * 0.95 },
-      { x: -17, y: 1, z: 5, rotationY: Math.PI * 0.55 },
-      { x: 17, y: 1, z: -5, rotationY: -Math.PI * 0.45 }
+      { x: -16, y: 0, z: -14, rotationY: Math.PI * 0.2 },
+      { x: 16, y: 0, z: -14, rotationY: -Math.PI * 0.2 },
+      { x: -16, y: 0, z: 14, rotationY: Math.PI * 0.8 },
+      { x: 16, y: 0, z: 14, rotationY: -Math.PI * 0.8 },
+      { x: -7, y: 0, z: -16, rotationY: Math.PI * 0.05 },
+      { x: 7, y: 0, z: 16, rotationY: -Math.PI * 0.95 },
+      { x: -17, y: 0, z: 5, rotationY: Math.PI * 0.55 },
+      { x: 17, y: 0, z: -5, rotationY: -Math.PI * 0.45 }
     ]
   },
   rooftop: {
     id: 'rooftop',
     name: '屋上施設',
     spawns: [
-      { x: -16, y: 1, z: -15, rotationY: Math.PI * 0.2 },
-      { x: 16, y: 1, z: -15, rotationY: -Math.PI * 0.2 },
-      { x: -16, y: 1, z: 15, rotationY: Math.PI * 0.8 },
-      { x: 16, y: 1, z: 15, rotationY: -Math.PI * 0.8 },
-      { x: -5, y: 1, z: -17, rotationY: Math.PI * 0.05 },
-      { x: 5, y: 1, z: 17, rotationY: -Math.PI * 0.95 },
-      { x: -17, y: 1, z: -4, rotationY: Math.PI * 0.35 },
-      { x: 17, y: 1, z: 4, rotationY: -Math.PI * 0.65 }
+      { x: -16, y: 0, z: -15, rotationY: Math.PI * 0.2 },
+      { x: 16, y: 0, z: -15, rotationY: -Math.PI * 0.2 },
+      { x: -16, y: 0, z: 15, rotationY: Math.PI * 0.8 },
+      { x: 16, y: 0, z: 15, rotationY: -Math.PI * 0.8 },
+      { x: -5, y: 0, z: -17, rotationY: Math.PI * 0.05 },
+      { x: 5, y: 0, z: 17, rotationY: -Math.PI * 0.95 },
+      { x: -17, y: 0, z: -4, rotationY: Math.PI * 0.35 },
+      { x: 17, y: 0, z: 4, rotationY: -Math.PI * 0.65 }
     ]
   }
 };

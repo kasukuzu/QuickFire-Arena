@@ -27,14 +27,14 @@ export const MAPS: Record<MapId, GameMapDefinition> = {
     name: '廃工場',
     description: '高台と通路がある工業系マップ',
     spawns: [
-      [-16, 1, -14],
-      [16, 1, -14],
-      [-16, 1, 14],
-      [16, 1, 14],
-      [-7, 1, -16],
-      [7, 1, 16],
-      [-17, 1, 5],
-      [17, 1, -5]
+      [-16, 0, -14],
+      [16, 0, -14],
+      [-16, 0, 14],
+      [16, 0, 14],
+      [-7, 0, -16],
+      [7, 0, 16],
+      [-17, 0, 5],
+      [17, 0, -5]
     ],
     collisionBoxes: makeFactoryCollisions(),
     walkableSurfaces: makeFactoryWalkables()
@@ -44,14 +44,14 @@ export const MAPS: Record<MapId, GameMapDefinition> = {
     name: '屋上施設',
     description: '明るめで外周ルートのある屋上マップ',
     spawns: [
-      [-16, 1, -15],
-      [16, 1, -15],
-      [-16, 1, 15],
-      [16, 1, 15],
-      [-5, 1, -17],
-      [5, 1, 17],
-      [-17, 1, -4],
-      [17, 1, 4]
+      [-16, 0, -15],
+      [16, 0, -15],
+      [-16, 0, 15],
+      [16, 0, 15],
+      [-5, 0, -17],
+      [5, 0, 17],
+      [-17, 0, -4],
+      [17, 0, 4]
     ],
     collisionBoxes: makeRooftopCollisions(),
     walkableSurfaces: makeRooftopWalkables()

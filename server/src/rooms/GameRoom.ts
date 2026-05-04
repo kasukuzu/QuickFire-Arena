@@ -270,7 +270,7 @@ export class GameRoom {
     const pickup: HealthPickupState = {
       id: crypto.randomUUID(),
       x: position.x,
-      y: Math.max(1.35, position.y + 0.55),
+      y: Math.max(0.55, position.y + 0.55),
       z: position.z,
       createdAt: now,
       expiresAt: now + HEALTH_PICKUP_MS
@@ -367,7 +367,7 @@ function nearestEnemyDistance(spawn: Vec3, enemies: PlayerState[]) {
 function clampArena(position: Vec3): Vec3 {
   return {
     x: Math.max(-17.5, Math.min(17.5, position.x)),
-    y: Math.max(1, Math.min(7.5, position.y)),
+    y: Math.max(0, Math.min(7.5, position.y)),
     z: Math.max(-17.5, Math.min(17.5, position.z))
   };
 }
