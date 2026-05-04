@@ -11,14 +11,14 @@ export default function FactoryMap() {
   return (
     <group>
       <mesh receiveShadow position={[0, -0.05, 0]}>
-        <boxGeometry args={[38, 0.1, 38]} />
+        <boxGeometry args={[46, 0.1, 46]} />
         <meshStandardMaterial color="#504b45" roughness={0.92} />
       </mesh>
-      <Box position={[0, 3.5, -19]} size={[38, 7, 1]} color="#3d3834" />
-      <Box position={[0, 3.5, 19]} size={[38, 7, 1]} color="#3d3834" />
-      <Box position={[-19, 3.5, 0]} size={[1, 7, 38]} color="#363330" />
-      <Box position={[19, 3.5, 0]} size={[1, 7, 38]} color="#363330" />
-      <Box position={[0, 7.1, 0]} size={[38, 0.35, 38]} color="#2b2c2b" />
+      <Box position={[0, 3.5, -23]} size={[46, 7, 1]} color="#3d3834" />
+      <Box position={[0, 3.5, 23]} size={[46, 7, 1]} color="#3d3834" />
+      <Box position={[-23, 3.5, 0]} size={[1, 7, 46]} color="#363330" />
+      <Box position={[23, 3.5, 0]} size={[1, 7, 46]} color="#363330" />
+      <Box position={[0, 7.1, 0]} size={[46, 0.35, 46]} color="#2b2c2b" />
 
       <Box position={[-2.4, 1.65, 0]} size={[5.2, 3.3, 4.6]} color="#5a524b" />
       <Box position={[3.7, 1.45, -2.1]} size={[3.8, 2.9, 3.2]} color="#6d4b37" />
@@ -46,6 +46,12 @@ export default function FactoryMap() {
       <Box position={[7.5, 0.95, -2.8]} size={[2.4, 1.9, 1.4]} color="#675043" />
       <Box position={[-9.5, 0.55, -10]} size={[2.4, 1.1, 1.2]} color="#7b4d31" />
       <Box position={[9.5, 0.55, 10]} size={[2.4, 1.1, 1.2]} color="#7b4d31" />
+      <Box position={[-18.5, 1.35, -2]} size={[3.8, 2.7, 5.8]} color="#6b4a34" />
+      <Box position={[18.5, 1.35, 2]} size={[3.8, 2.7, 5.8]} color="#5d5147" />
+      <Box position={[-3, 1.25, -18]} size={[7.5, 2.5, 1.4]} color="#6c422e" />
+      <Box position={[3, 1.25, 18]} size={[7.5, 2.5, 1.4]} color="#6c422e" />
+      <Box position={[-18.5, 2.9, -6.2]} size={[4, 0.35, 0.35]} color="#9a552e" />
+      <Box position={[18.5, 2.9, 6.2]} size={[4, 0.35, 0.35]} color="#9a552e" />
       <Box position={[0, 6.2, -5]} size={[34, 0.45, 0.45]} color="#423d39" />
       <Box position={[0, 6.2, 5]} size={[34, 0.45, 0.45]} color="#423d39" />
       <Box position={[-7, 6.35, 0]} size={[0.38, 0.38, 32]} color="#5f3f2d" />

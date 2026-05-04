@@ -678,6 +678,142 @@ td {
   height: 2px;
 }
 
+.ads-holo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 138px;
+  height: 112px;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.65));
+}
+
+.holo-post {
+  position: absolute;
+  bottom: 22px;
+  width: 10px;
+  height: 78px;
+  border-radius: 8px 8px 3px 3px;
+  background: rgba(8, 10, 10, 0.86);
+}
+
+.holo-post.left {
+  left: 16px;
+  transform: rotate(-7deg);
+}
+
+.holo-post.right {
+  right: 16px;
+  transform: rotate(7deg);
+}
+
+.holo-base {
+  position: absolute;
+  left: 34px;
+  right: 34px;
+  bottom: 16px;
+  height: 10px;
+  border-radius: 4px;
+  background: rgba(10, 12, 12, 0.9);
+}
+
+.holo-dot,
+.scope-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  background: #ff4646;
+  box-shadow: 0 0 10px rgba(255, 70, 70, 0.88);
+}
+
+.ads-scope {
+  position: absolute;
+  inset: 0;
+}
+
+.scope-mask {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0 31vmin, rgba(0, 0, 0, 0.86) 31.3vmin 100%);
+}
+
+.scope-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(62vmin, 640px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 18px solid rgba(4, 5, 6, 0.95);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 0 42px rgba(0, 0, 0, 0.38),
+    0 0 0 2px rgba(255, 255, 255, 0.08),
+    0 0 60px rgba(0, 0, 0, 0.55);
+}
+
+.scope-line {
+  position: absolute;
+  background: rgba(10, 10, 10, 0.82);
+}
+
+.scope-line.horizontal {
+  left: 7%;
+  right: 7%;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.scope-line.vertical {
+  top: 7%;
+  bottom: 7%;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+}
+
+.scope-tick {
+  position: absolute;
+  background: rgba(10, 10, 10, 0.72);
+}
+
+.tick-left,
+.tick-right {
+  top: 50%;
+  width: 22px;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.tick-left {
+  left: 36%;
+}
+
+.tick-right {
+  right: 36%;
+}
+
+.tick-top,
+.tick-bottom {
+  left: 50%;
+  width: 2px;
+  height: 22px;
+  transform: translateX(-50%);
+}
+
+.tick-top {
+  top: 36%;
+}
+
+.tick-bottom {
+  bottom: 36%;
+}
+
 .respawn {
   position: absolute;
   left: 50%;
@@ -692,6 +828,75 @@ td {
 .respawn.invincible {
   top: 64%;
   color: #bceeff;
+}
+
+.kill-feed {
+  position: absolute;
+  top: 64px;
+  right: 24px;
+  display: grid;
+  gap: 7px;
+  width: min(360px, calc(100% - 48px));
+}
+
+.kill-feed-row {
+  display: grid;
+  grid-template-columns: minmax(72px, 1fr) auto minmax(72px, 1fr);
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: rgba(8, 10, 10, 0.72);
+  color: #f4f2ea;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.kill-feed-row.involved {
+  border-color: rgba(212, 173, 88, 0.7);
+  background: rgba(47, 38, 17, 0.78);
+}
+
+.kill-feed-row strong,
+.kill-feed-row em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: normal;
+}
+
+.kill-feed-row span {
+  color: #d4ad58;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.kill-streak-message {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  color: #ffe28a;
+  font-size: clamp(34px, 6vw, 64px);
+  font-weight: 950;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.82);
+  animation: kill-pop 1.6s ease-out forwards;
+}
+
+@keyframes kill-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.82);
+  }
+  16% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -62%) scale(1);
+  }
 }
 
 .scoreboard {

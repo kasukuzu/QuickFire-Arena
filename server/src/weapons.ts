@@ -9,6 +9,7 @@ export type WeaponConfig = {
   reloadMs: number;
   range: number;
   adsFov: number;
+  zoomMultiplier: number;
 };
 
 export const WEAPONS: Record<WeaponId, WeaponConfig> = {
@@ -20,7 +21,8 @@ export const WEAPONS: Record<WeaponId, WeaponConfig> = {
     magazineSize: 30,
     reloadMs: 1800,
     range: 70,
-    adsFov: 52
+    adsFov: 50,
+    zoomMultiplier: 1.5
   },
   smg: {
     id: 'smg',
@@ -30,7 +32,8 @@ export const WEAPONS: Record<WeaponId, WeaponConfig> = {
     magazineSize: 35,
     reloadMs: 1500,
     range: 45,
-    adsFov: 55
+    adsFov: 75,
+    zoomMultiplier: 1
   },
   sr: {
     id: 'sr',
@@ -40,6 +43,7 @@ export const WEAPONS: Record<WeaponId, WeaponConfig> = {
     magazineSize: 5,
     reloadMs: 2400,
     range: 120,
-    adsFov: 28
+    adsFov: 18.75,
+    zoomMultiplier: 4
   }
 };

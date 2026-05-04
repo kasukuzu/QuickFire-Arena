@@ -21,34 +21,37 @@ const WALL_HEIGHT = 8;
 const WALL_CENTER_Y = WALL_HEIGHT / 2;
 
 export const warehouseRespawns: Vec3Tuple[] = [
-  [-16, 0, -15],
-  [16, 0, -15],
-  [-16, 0, 15],
-  [16, 0, 15],
-  [-7, 0, -16],
-  [7, 0, 16],
-  [-17, 0, 6],
-  [17, 0, -6]
+  [-20, 0, -17],
+  [20, 0, -17],
+  [-20, 0, 17],
+  [20, 0, 17],
+  [-8, 0, -20],
+  [8, 0, 20],
+  [-21, 0, 7],
+  [21, 0, -7]
 ];
 
 const walls: BoxItem[] = [
-  { id: 'north-wall', position: [0, WALL_CENTER_Y, -19], size: [38, WALL_HEIGHT, 1], color: '#3d4240' },
-  { id: 'south-wall', position: [0, WALL_CENTER_Y, 19], size: [38, WALL_HEIGHT, 1], color: '#3d4240' },
-  { id: 'west-wall', position: [-19, WALL_CENTER_Y, 0], size: [1, WALL_HEIGHT, 38], color: '#393f3e' },
-  { id: 'east-wall', position: [19, WALL_CENTER_Y, 0], size: [1, WALL_HEIGHT, 38], color: '#393f3e' },
-  { id: 'north-inner-office', position: [-9, 2.2, -11.5], size: [8, 4.4, 0.55], color: '#464b49' },
-  { id: 'south-inner-office', position: [9, 2.2, 11.5], size: [8, 4.4, 0.55], color: '#464b49' },
-  { id: 'north-left-column', position: [-16.5, 3.4, -16.5], size: [0.9, 6.8, 0.9], color: '#343938' },
-  { id: 'north-right-column', position: [16.5, 3.4, -16.5], size: [0.9, 6.8, 0.9], color: '#343938' },
-  { id: 'south-left-column', position: [-16.5, 3.4, 16.5], size: [0.9, 6.8, 0.9], color: '#343938' },
-  { id: 'south-right-column', position: [16.5, 3.4, 16.5], size: [0.9, 6.8, 0.9], color: '#343938' }
+  { id: 'north-wall', position: [0, WALL_CENTER_Y, -23], size: [46, WALL_HEIGHT, 1], color: '#3d4240' },
+  { id: 'south-wall', position: [0, WALL_CENTER_Y, 23], size: [46, WALL_HEIGHT, 1], color: '#3d4240' },
+  { id: 'west-wall', position: [-23, WALL_CENTER_Y, 0], size: [1, WALL_HEIGHT, 46], color: '#393f3e' },
+  { id: 'east-wall', position: [23, WALL_CENTER_Y, 0], size: [1, WALL_HEIGHT, 46], color: '#393f3e' },
+  { id: 'loading-room-back', position: [-18, 2.2, -5], size: [0.65, 4.4, 10], color: '#464b49' },
+  { id: 'loading-room-side', position: [-14, 2.2, -10], size: [8, 4.4, 0.55], color: '#464b49' },
+  { id: 'south-inner-office', position: [11, 2.2, 13.5], size: [9, 4.4, 0.55], color: '#464b49' },
+  { id: 'north-left-column', position: [-20, 3.4, -20], size: [0.9, 6.8, 0.9], color: '#343938' },
+  { id: 'north-right-column', position: [20, 3.4, -20], size: [0.9, 6.8, 0.9], color: '#343938' },
+  { id: 'south-left-column', position: [-20, 3.4, 20], size: [0.9, 6.8, 0.9], color: '#343938' },
+  { id: 'south-right-column', position: [20, 3.4, 20], size: [0.9, 6.8, 0.9], color: '#343938' }
 ];
 
 const containers: BoxItem[] = [
   { id: 'blue-container-left', position: [-7.2, 1.35, -1.4], size: [5.8, 2.7, 2.4], color: '#46535b' },
   { id: 'yellow-container-right', position: [7.4, 1.35, 1.2], size: [5.8, 2.7, 2.4], color: '#706633' },
   { id: 'short-container-north', position: [1, 1.15, -8.4], size: [6.6, 2.3, 1.8], color: '#555e63' },
-  { id: 'short-container-south', position: [-1, 1.15, 8.4], size: [6.6, 2.3, 1.8], color: '#59605c' }
+  { id: 'short-container-south', position: [-1, 1.15, 8.4], size: [6.6, 2.3, 1.8], color: '#59605c' },
+  { id: 'loading-bay-container', position: [-17.5, 1.2, -1], size: [2.2, 2.4, 5.8], color: '#4f5960' },
+  { id: 'east-long-container', position: [18, 1.2, 8], size: [2.2, 2.4, 6.8], color: '#6a6339' }
 ];
 
 const crates: BoxItem[] = [
@@ -59,6 +62,10 @@ const crates: BoxItem[] = [
   { id: 'spawn-cover-ne', position: [13.9, 0.85, -12.4], size: [2.3, 1.7, 1.5], color: '#806341' },
   { id: 'spawn-cover-sw', position: [-13.6, 0.85, 12.4], size: [2.3, 1.7, 1.5], color: '#806341' },
   { id: 'spawn-cover-se', position: [13.8, 0.85, 12.1], size: [2.3, 1.7, 1.5], color: '#806341' },
+  { id: 'outer-spawn-cover-nw', position: [-20, 1.1, -14.5], size: [3.4, 2.2, 1.3], color: '#806341' },
+  { id: 'outer-spawn-cover-ne', position: [20, 1.1, -14.5], size: [3.4, 2.2, 1.3], color: '#806341' },
+  { id: 'outer-spawn-cover-sw', position: [-20, 1.1, 14.5], size: [3.4, 2.2, 1.3], color: '#806341' },
+  { id: 'outer-spawn-cover-se', position: [20, 1.1, 14.5], size: [3.4, 2.2, 1.3], color: '#806341' },
   { id: 'north-spawn-cover', position: [-4, 0.7, -13.7], size: [3, 1.4, 1], color: '#755a38' },
   { id: 'south-spawn-cover', position: [4, 0.7, 13.7], size: [3, 1.4, 1], color: '#755a38' },
   { id: 'warehouse-baffle-north-west', position: [-7.2, 1.2, -14.1], size: [4.2, 2.4, 0.65], color: '#69533a' },
@@ -68,10 +75,10 @@ const crates: BoxItem[] = [
 ];
 
 const shelves: BoxItem[] = [
-  { id: 'west-rack-a', position: [-15.2, 1.45, -5], size: [0.7, 2.9, 5.2], color: '#596165' },
+  { id: 'west-rack-a', position: [-20.5, 1.45, -7], size: [0.7, 2.9, 6.2], color: '#596165' },
   { id: 'west-rack-b', position: [-15.2, 1.45, 6.2], size: [0.7, 2.9, 5.2], color: '#596165' },
   { id: 'east-rack-a', position: [15.2, 1.45, 5], size: [0.7, 2.9, 5.2], color: '#596165' },
-  { id: 'east-rack-b', position: [15.2, 1.45, -6.2], size: [0.7, 2.9, 5.2], color: '#596165' },
+  { id: 'east-rack-b', position: [20.5, 1.45, -7], size: [0.7, 2.9, 6.2], color: '#596165' },
   { id: 'north-rack', position: [8.5, 1.45, -14.6], size: [5.6, 2.9, 0.7], color: '#596165' },
   { id: 'south-rack', position: [-8.5, 1.45, 14.6], size: [5.6, 2.9, 0.7], color: '#596165' }
 ];
@@ -178,7 +185,7 @@ function Floor() {
   return (
     <group>
       <mesh receiveShadow position={[0, -0.05, 0]}>
-        <boxGeometry args={[38, 0.1, 38]} />
+        <boxGeometry args={[46, 0.1, 46]} />
         <meshStandardMaterial color="#4f5552" roughness={0.92} />
       </mesh>
       <mesh receiveShadow position={[-7, 0.002, 7]}>
@@ -196,7 +203,7 @@ function Floor() {
 function Ceiling() {
   return (
     <mesh receiveShadow position={[0, CEILING_Y, 0]}>
-      <boxGeometry args={[38, 0.35, 38]} />
+      <boxGeometry args={[46, 0.35, 46]} />
       <meshStandardMaterial color="#303635" roughness={0.88} />
     </mesh>
   );

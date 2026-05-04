@@ -11,13 +11,13 @@ export default function RooftopMap() {
   return (
     <group>
       <mesh receiveShadow position={[0, -0.05, 0]}>
-        <boxGeometry args={[38, 0.1, 38]} />
+        <boxGeometry args={[46, 0.1, 46]} />
         <meshStandardMaterial color="#777d7d" roughness={0.88} />
       </mesh>
-      <Box position={[0, 1.7, -19]} size={[38, 3.4, 1]} color="#596162" />
-      <Box position={[0, 1.7, 19]} size={[38, 3.4, 1]} color="#596162" />
-      <Box position={[-19, 1.7, 0]} size={[1, 3.4, 38]} color="#535b5c" />
-      <Box position={[19, 1.7, 0]} size={[1, 3.4, 38]} color="#535b5c" />
+      <Box position={[0, 1.7, -23]} size={[46, 3.4, 1]} color="#596162" />
+      <Box position={[0, 1.7, 23]} size={[46, 3.4, 1]} color="#596162" />
+      <Box position={[-23, 1.7, 0]} size={[1, 3.4, 46]} color="#535b5c" />
+      <Box position={[23, 1.7, 0]} size={[1, 3.4, 46]} color="#535b5c" />
 
       <Box position={[0, 1.45, 0]} size={[5.8, 2.9, 4.2]} color="#6f7778" />
       <Box position={[-6.2, 0.95, -3.2]} size={[4.8, 1.9, 2.3]} color="#687172" />
@@ -47,6 +47,12 @@ export default function RooftopMap() {
       <Box position={[3.8, 1.75, 0]} size={[0.22, 0.22, 8]} color="#546062" />
       <Box position={[0, 2.95, -2.4]} size={[5.8, 0.3, 0.35]} color="#50595a" />
       <Box position={[0, 2.95, 2.4]} size={[5.8, 0.3, 0.35]} color="#50595a" />
+      <Box position={[-12, 1.25, -18]} size={[6, 2.5, 2.5]} color="#6d7677" />
+      <Box position={[12, 1.25, 18]} size={[6, 2.5, 2.5]} color="#6d7677" />
+      <Box position={[-19, 1.4, 8]} size={[3.2, 2.8, 6]} color="#637074" />
+      <Box position={[19, 1.05, -8]} size={[3.2, 2.1, 6]} color="#7c8788" />
+      <Box position={[0, 0.75, -18]} size={[6, 1.5, 1.2]} color="#879092" />
+      <Box position={[0, 0.75, 18]} size={[6, 1.5, 1.2]} color="#879092" />
 
       <ambientLight intensity={0.78} />
       <directionalLight position={[8, 14, 5]} intensity={1.65} color="#fff4d7" />

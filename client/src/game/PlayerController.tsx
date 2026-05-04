@@ -30,6 +30,7 @@ const STAND_PLAYER_HEIGHT = 1.8;
 const CROUCH_PLAYER_HEIGHT = 1.22;
 const CROUCH_LERP_SPEED = 10;
 const CROUCH_SPEED_MULTIPLIER = 0.65;
+const BASE_FOV = 75;
 
 export default function PlayerController({ player, snapshot, activeMapId, send, onScoreboard, onWeaponViewChange, onShotVisual }: Props) {
   const { camera, gl } = useThree();
@@ -46,14 +47,18 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
   const playerRef = useRef(player);
   const previousAlive = useRef(player.alive);
   const sendRef = useRef(send);
+  const snapshotRef = useRef(snapshot);
   const weaponSystemRef = useRef(weaponSystem);
   const fireRef = useRef<() => void>(() => undefined);
   const canShootRef = useRef<() => boolean>(() => false);
+  const adsMouseDown = useRef(false);
+  const adsKeyDown = useRef(false);
 
   const weapon = WEAPONS[player.weaponId];
   const euler = useMemo(() => new THREE.Euler(0, 0, 0, 'YXZ'), []);
   const direction = useMemo(() => new THREE.Vector3(), []);
   playerRef.current = player;
+  snapshotRef.current = snapshot;
   sendRef.current = send;
   weaponSystemRef.current = weaponSystem;
   fireRef.current = fire;
@@ -79,14 +84,25 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
         event.preventDefault();
         onScoreboard(true);
       }
+      if (event.code === 'KeyK') {
+        adsKeyDown.current = true;
+        updateAdsInput();
+      }
       if (event.code === 'KeyR') sendRef.current({ type: 'reload' });
     };
     const onKeyUp = (event: KeyboardEvent) => {
       keys.delete(event.code);
       if (event.code === 'Tab') onScoreboard(false);
+      if (event.code === 'KeyK') {
+        adsKeyDown.current = false;
+        updateAdsInput();
+      }
     };
     const onMouseDown = (event: MouseEvent) => {
-      if (event.button === 2) weaponSystemRef.current.startAds();
+      if (event.button === 2) {
+        adsMouseDown.current = true;
+        updateAdsInput();
+      }
       if (event.button === 0) {
         if (canShootRef.current()) {
           weaponSystemRef.current.startFire(playerRef.current.weaponId, () => fireRef.current());
@@ -94,7 +110,10 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
       }
     };
     const onMouseUp = (event: MouseEvent) => {
-      if (event.button === 2) weaponSystemRef.current.stopAds();
+      if (event.button === 2) {
+        adsMouseDown.current = false;
+        updateAdsInput();
+      }
       if (event.button === 0) weaponSystemRef.current.stopFire();
     };
     const onContextMenu = (event: MouseEvent) => event.preventDefault();
@@ -114,6 +133,14 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
       window.removeEventListener('contextmenu', onContextMenu);
     };
   }, [gl.domElement, onScoreboard]);
+
+  function updateAdsInput() {
+    if ((adsMouseDown.current || adsKeyDown.current) && canAds()) {
+      weaponSystemRef.current.startAds();
+    } else {
+      weaponSystemRef.current.stopAds();
+    }
+  }
 
   useEffect(() => {
     if (!player.alive) {
@@ -151,13 +178,16 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
       shotPulse: weaponSystem.shotPulse
     });
 
-    fpsCamera.fov = THREE.MathUtils.lerp(fpsCamera.fov, weaponSystem.ads ? weapon.adsFov : 68, 0.18);
+    const targetFov = weaponSystem.ads ? getAdsFov(BASE_FOV, weapon.zoomMultiplier) : BASE_FOV;
+    fpsCamera.fov = THREE.MathUtils.lerp(fpsCamera.fov, targetFov, 0.18);
     fpsCamera.updateProjectionMatrix();
 
     if (!player.alive || snapshot.state !== 'playing') {
+      weaponSystem.stopAds();
       camera.position.set(player.position.x, player.position.y + cameraHeight.current, player.position.z);
       return;
     }
+    if (!canAds()) weaponSystem.stopAds();
 
     weaponSystem.updateAutomaticFire(player.weaponId, canShoot(), fire);
 
@@ -203,8 +233,8 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
       }
     }
 
-    position.current.x = THREE.MathUtils.clamp(position.current.x, -17.5, 17.5);
-    position.current.z = THREE.MathUtils.clamp(position.current.z, -17.5, 17.5);
+    position.current.x = THREE.MathUtils.clamp(position.current.x, -22.5, 22.5);
+    position.current.z = THREE.MathUtils.clamp(position.current.z, -22.5, 22.5);
 
     euler.set(pitch.current, yaw.current, 0);
     camera.quaternion.setFromEuler(euler);
@@ -230,6 +260,17 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
       player.ammo > 0 &&
       !player.reloadingUntil &&
       !(player.invincibleUntil && player.invincibleUntil > snapshot.serverTime)
+    );
+  }
+
+  function canAds() {
+    const currentPlayer = playerRef.current;
+    const currentSnapshot = snapshotRef.current;
+    return (
+      currentSnapshot.state === 'playing' &&
+      currentPlayer.alive &&
+      !currentPlayer.reloadingUntil &&
+      !(currentPlayer.invincibleUntil && currentPlayer.invincibleUntil > currentSnapshot.serverTime)
     );
   }
 
@@ -354,11 +395,15 @@ function rayPlaneYHit(origin: THREE.Vector3, direction: THREE.Vector3, y: number
   const distance = (y - origin.y) / direction.y;
   if (distance < 0) return null;
   const point = origin.clone().addScaledVector(direction, distance);
-  return Math.abs(point.x) <= 18.5 && Math.abs(point.z) <= 18.5 ? distance : null;
+  return Math.abs(point.x) <= 23.5 && Math.abs(point.z) <= 23.5 ? distance : null;
 }
 
 function toVec3(v: THREE.Vector3): Vec3 {
   return { x: v.x, y: v.y, z: v.z };
+}
+
+function getAdsFov(baseFov: number, zoomMultiplier: number) {
+  return baseFov / zoomMultiplier;
 }
 
 function isGrounded(position: THREE.Vector3, activeMapId: MapId) {

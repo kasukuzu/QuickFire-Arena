@@ -27,14 +27,14 @@ export const MAPS: Record<MapId, GameMapDefinition> = {
     name: '廃工場',
     description: '高台と通路がある工業系マップ',
     spawns: [
-      [-16, 0, -14],
-      [16, 0, -14],
-      [-16, 0, 14],
-      [16, 0, 14],
-      [-7, 0, -16],
-      [7, 0, 16],
-      [-17, 0, 5],
-      [17, 0, -5]
+      [-20, 0, -16],
+      [20, 0, -16],
+      [-20, 0, 16],
+      [20, 0, 16],
+      [-8, 0, -20],
+      [8, 0, 20],
+      [-21, 0, 6],
+      [21, 0, -6]
     ],
     collisionBoxes: makeFactoryCollisions(),
     walkableSurfaces: makeFactoryWalkables()
@@ -44,14 +44,14 @@ export const MAPS: Record<MapId, GameMapDefinition> = {
     name: '屋上施設',
     description: '明るめで外周ルートのある屋上マップ',
     spawns: [
-      [-16, 0, -15],
-      [16, 0, -15],
-      [-16, 0, 15],
-      [16, 0, 15],
-      [-5, 0, -17],
-      [5, 0, 17],
-      [-17, 0, -4],
-      [17, 0, 4]
+      [-20, 0, -17],
+      [20, 0, -17],
+      [-20, 0, 17],
+      [20, 0, 17],
+      [-6, 0, -21],
+      [6, 0, 21],
+      [-21, 0, -5],
+      [21, 0, 5]
     ],
     collisionBoxes: makeRooftopCollisions(),
     walkableSurfaces: makeRooftopWalkables()
@@ -77,10 +77,10 @@ export function getActiveMapName(mapId: MapId) {
 
 function makeFactoryCollisions(): CollisionBox[] {
   return [
-    box('factory-north-wall', [0, 3.5, -19], [38, 7, 1]),
-    box('factory-south-wall', [0, 3.5, 19], [38, 7, 1]),
-    box('factory-west-wall', [-19, 3.5, 0], [1, 7, 38]),
-    box('factory-east-wall', [19, 3.5, 0], [1, 7, 38]),
+    box('factory-north-wall', [0, 3.5, -23], [46, 7, 1]),
+    box('factory-south-wall', [0, 3.5, 23], [46, 7, 1]),
+    box('factory-west-wall', [-23, 3.5, 0], [1, 7, 46]),
+    box('factory-east-wall', [23, 3.5, 0], [1, 7, 46]),
     box('central-machine-a', [-2.4, 1.65, 0], [5.2, 3.3, 4.6]),
     box('central-machine-b', [3.7, 1.45, -2.1], [3.8, 2.9, 3.2]),
     box('central-tank', [2.7, 1.55, 3.8], [2.6, 3.1, 2.6]),
@@ -104,7 +104,11 @@ function makeFactoryCollisions(): CollisionBox[] {
     box('factory-mid-cover-west', [-7.5, 0.95, 2.8], [2.4, 1.9, 1.4]),
     box('factory-mid-cover-east', [7.5, 0.95, -2.8], [2.4, 1.9, 1.4]),
     box('factory-short-corner-a', [-9.5, 0.55, -10], [2.4, 1.1, 1.2]),
-    box('factory-short-corner-b', [9.5, 0.55, 10], [2.4, 1.1, 1.2])
+    box('factory-short-corner-b', [9.5, 0.55, 10], [2.4, 1.1, 1.2]),
+    box('factory-west-annex-machine', [-18.5, 1.35, -2], [3.8, 2.7, 5.8]),
+    box('factory-east-annex-machine', [18.5, 1.35, 2], [3.8, 2.7, 5.8]),
+    box('factory-north-pipe-stack', [-3, 1.25, -18], [7.5, 2.5, 1.4]),
+    box('factory-south-pipe-stack', [3, 1.25, 18], [7.5, 2.5, 1.4])
   ];
 }
 
@@ -121,10 +125,10 @@ function makeFactoryWalkables(): CollisionBox[] {
 
 function makeRooftopCollisions(): CollisionBox[] {
   return [
-    box('roof-north-wall', [0, 1.7, -19], [38, 3.4, 1]),
-    box('roof-south-wall', [0, 1.7, 19], [38, 3.4, 1]),
-    box('roof-west-wall', [-19, 1.7, 0], [1, 3.4, 38]),
-    box('roof-east-wall', [19, 1.7, 0], [1, 3.4, 38]),
+    box('roof-north-wall', [0, 1.7, -23], [46, 3.4, 1]),
+    box('roof-south-wall', [0, 1.7, 23], [46, 3.4, 1]),
+    box('roof-west-wall', [-23, 1.7, 0], [1, 3.4, 46]),
+    box('roof-east-wall', [23, 1.7, 0], [1, 3.4, 46]),
     box('equipment-shed', [0, 1.45, 0], [5.8, 2.9, 4.2]),
     box('hvac-center-a', [-6.2, 0.95, -3.2], [4.8, 1.9, 2.3]),
     box('hvac-center-b', [6.4, 0.95, 3.2], [4.8, 1.9, 2.3]),
@@ -143,7 +147,13 @@ function makeRooftopCollisions(): CollisionBox[] {
     box('spawn-hvac-north', [-5, 1, -14.5], [4.4, 2, 1.5]),
     box('spawn-hvac-south', [5, 1, 14.5], [4.4, 2, 1.5]),
     box('spawn-screen-west', [-15.4, 1.2, -4], [1.3, 2.4, 4]),
-    box('spawn-screen-east', [15.4, 1.2, 4], [1.3, 2.4, 4])
+    box('spawn-screen-east', [15.4, 1.2, 4], [1.3, 2.4, 4]),
+    box('roof-north-service-hut', [-12, 1.25, -18], [6, 2.5, 2.5]),
+    box('roof-south-service-hut', [12, 1.25, 18], [6, 2.5, 2.5]),
+    box('roof-west-water-bank', [-19, 1.4, 8], [3.2, 2.8, 6]),
+    box('roof-east-hvac-bank', [19, 1.05, -8], [3.2, 2.1, 6]),
+    box('roof-north-low-cover', [0, 0.75, -18], [6, 1.5, 1.2]),
+    box('roof-south-low-cover', [0, 0.75, 18], [6, 1.5, 1.2])
   ];
 }
 

@@ -25,6 +25,8 @@ export type PlayerState = {
   ammo: number;
   kills: number;
   deaths: number;
+  totalDamage: number;
+  killStreak: number;
   alive: boolean;
   crouching: boolean;
   invincibleUntil: number | null;
@@ -39,6 +41,36 @@ export type HealthPickupState = {
   z: number;
   createdAt: number;
   expiresAt: number;
+};
+
+export type DamageEvent = {
+  id: string;
+  targetId: string;
+  attackerId: string;
+  damage: number;
+  hitPart: HitPart;
+  isHeadshot: boolean;
+  createdAt: number;
+};
+
+export type ShotEvent = {
+  id: string;
+  shooterId: string;
+  weaponId: WeaponId;
+  position: Vec3;
+  createdAt: number;
+};
+
+export type KillFeedEvent = {
+  id: string;
+  killerId: string;
+  killerName: string;
+  victimId: string;
+  victimName: string;
+  weaponId: WeaponId;
+  isHeadshot: boolean;
+  killStreak: number;
+  createdAt: number;
 };
 
 export type RoomSnapshot = {
@@ -56,6 +88,9 @@ export type RoomSnapshot = {
   hostId: string;
   players: PlayerState[];
   healthPickups: HealthPickupState[];
+  damageEvents: DamageEvent[];
+  shotEvents: ShotEvent[];
+  killFeedEvents: KillFeedEvent[];
   maxPlayers: number;
   matchEndsAt: number | null;
   serverTime: number;

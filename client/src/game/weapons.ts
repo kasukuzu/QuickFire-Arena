@@ -10,6 +10,7 @@ export type WeaponConfig = {
   reloadMs: number;
   range: number;
   adsFov: number;
+  zoomMultiplier: number;
   automatic: boolean;
   recoil: number;
   muzzleScale: number;
@@ -38,7 +39,8 @@ export const WEAPONS: Record<WeaponId, WeaponConfig> = {
     magazineSize: 30,
     reloadMs: 1800,
     range: 70,
-    adsFov: 52,
+    adsFov: 50,
+    zoomMultiplier: 1.5,
     automatic: true,
     recoil: 0.22,
     muzzleScale: 1,
@@ -65,7 +67,8 @@ export const WEAPONS: Record<WeaponId, WeaponConfig> = {
     magazineSize: 35,
     reloadMs: 1500,
     range: 45,
-    adsFov: 55,
+    adsFov: 75,
+    zoomMultiplier: 1,
     automatic: true,
     recoil: 0.16,
     muzzleScale: 0.9,
@@ -92,7 +95,8 @@ export const WEAPONS: Record<WeaponId, WeaponConfig> = {
     magazineSize: 5,
     reloadMs: 2400,
     range: 120,
-    adsFov: 28,
+    adsFov: 18.75,
+    zoomMultiplier: 4,
     automatic: false,
     recoil: 0.58,
     muzzleScale: 1.45,

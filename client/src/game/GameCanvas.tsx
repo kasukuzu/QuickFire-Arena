@@ -1,7 +1,9 @@
 import { Canvas } from '@react-three/fiber';
 import { Sky } from '@react-three/drei';
 import { useCallback, useState } from 'react';
+import GameAudio from './audio/GameAudio';
 import BulletTracer, { type BulletTracerItem } from './BulletTracer';
+import DamageNumbers from './effects/DamageNumbers';
 import HealthPickups from './HealthPickups';
 import HUD from './HUD';
 import ImpactEffect, { type ImpactEffectItem } from './ImpactEffect';
@@ -46,7 +48,7 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
 
   return (
     <main className="game-screen">
-      <Canvas shadows camera={{ fov: 68, near: 0.1, far: 180, position: [0, 2.5, 8] }}>
+      <Canvas shadows camera={{ fov: 75, near: 0.1, far: 180, position: [0, 2.5, 8] }}>
         <color attach="background" args={['#9db3bf']} />
         <ambientLight intensity={0.45} />
         <directionalLight castShadow position={[10, 18, 8]} intensity={1.5} shadow-mapSize={[2048, 2048]} />
@@ -56,6 +58,7 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
           player.id === playerId ? null : <PlayerAvatar key={player.id} player={player} serverTime={snapshot.serverTime} />
         )}
         <HealthPickups pickups={snapshot.healthPickups} serverTime={snapshot.serverTime} />
+        <DamageNumbers events={snapshot.damageEvents} players={snapshot.players} serverTime={snapshot.serverTime} />
         <BulletTracer tracers={tracers} />
         <ImpactEffect impacts={impacts} />
         <WeaponModel
@@ -77,8 +80,9 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
           onWeaponViewChange={setWeaponView}
           onShotVisual={addShotVisual}
         />
+        <GameAudio snapshot={snapshot} localPlayerId={playerId} />
       </Canvas>
-      <HUD snapshot={snapshot} player={me} scoreboardOpen={scoreboardOpen} />
+      <HUD snapshot={snapshot} player={me} scoreboardOpen={scoreboardOpen} ads={weaponView.ads} playerId={playerId} />
       <div className="lock-hint">Click viewport to lock mouse</div>
     </main>
   );

@@ -2,13 +2,16 @@ import type WebSocket from 'ws';
 import { HIT_PART_DAMAGE_MULTIPLIER, PLAYER_HITBOXES } from '../hitboxes.js';
 import { getSpawns, isMapSelectionId, resolveActiveMapId } from '../maps.js';
 import { WEAPONS } from '../weapons.js';
-import type { ClientMessage, HealthPickupState, HitPart, MapId, MapSelectionId, PlayerState, RoomSnapshot, ServerMessage, Vec3, WeaponId } from '../types.js';
+import type { ClientMessage, DamageEvent, HealthPickupState, HitPart, KillFeedEvent, MapId, MapSelectionId, PlayerState, RoomSnapshot, ServerMessage, ShotEvent, Vec3, WeaponId } from '../types.js';
 
 const MATCH_MS = 5 * 60 * 1000;
 const MAX_PLAYERS = 8;
 const RESPAWN_MS = 5000;
 const INVINCIBLE_MS = 2000;
 const HEALTH_PICKUP_MS = 7000;
+const DAMAGE_EVENT_MS = 1200;
+const SHOT_EVENT_MS = 1000;
+const KILL_FEED_MS = 5000;
 const HEALTH_PICKUP_RADIUS = 1.2;
 const MAP_SELECTED_MS = 2000;
 const COUNTDOWN_MS = 3500;
@@ -40,6 +43,9 @@ export class GameRoom {
   private players = new Map<string, PlayerState>();
   private clients = new Map<string, Client>();
   private healthPickups = new Map<string, HealthPickupState>();
+  private damageEvents: DamageEvent[] = [];
+  private shotEvents: ShotEvent[] = [];
+  private killFeedEvents: KillFeedEvent[] = [];
   private tickHandle: NodeJS.Timeout;
 
   constructor(id: string) {
@@ -83,6 +89,8 @@ export class GameRoom {
       ammo: weapon.magazineSize,
       kills: 0,
       deaths: 0,
+      totalDamage: 0,
+      killStreak: 0,
       alive: true,
       crouching: false,
       invincibleUntil: null,
@@ -183,6 +191,9 @@ export class GameRoom {
       hostId: this.hostId,
       players: [...this.players.values()],
       healthPickups: [...this.healthPickups.values()],
+      damageEvents: this.damageEvents,
+      shotEvents: this.shotEvents,
+      killFeedEvents: this.killFeedEvents,
       maxPlayers: MAX_PLAYERS,
       matchEndsAt: this.matchEndsAt,
       serverTime: Date.now(),
@@ -249,6 +260,8 @@ export class GameRoom {
         ammo: weapon.magazineSize,
         kills: 0,
         deaths: 0,
+        totalDamage: 0,
+        killStreak: 0,
         alive: true,
         crouching: false,
         isReady: false,
@@ -274,6 +287,9 @@ export class GameRoom {
 
   private tick() {
     const now = Date.now();
+    this.damageEvents = this.damageEvents.filter((event) => now - event.createdAt <= DAMAGE_EVENT_MS);
+    this.shotEvents = this.shotEvents.filter((event) => now - event.createdAt <= SHOT_EVENT_MS);
+    this.killFeedEvents = this.killFeedEvents.filter((event) => now - event.createdAt <= KILL_FEED_MS);
     for (const [id, pickup] of this.healthPickups) {
       if (now >= pickup.expiresAt) this.healthPickups.delete(id);
     }
@@ -314,6 +330,13 @@ export class GameRoom {
     if (now - client.lastShotAt < weapon.fireIntervalMs || shooter.ammo <= 0) return;
     client.lastShotAt = now;
     shooter.ammo -= 1;
+    this.shotEvents.push({
+      id: crypto.randomUUID(),
+      shooterId: playerId,
+      weaponId: shooter.weaponId,
+      position: { ...shooter.position },
+      createdAt: now
+    });
 
     let bestTarget: PlayerState | null = null;
     let bestDistance = Number.POSITIVE_INFINITY;
@@ -336,14 +359,41 @@ export class GameRoom {
     if (claimedHitPlayerId && bestTarget.id !== claimedHitPlayerId) return;
     const multiplier = bestHitPart ? HIT_PART_DAMAGE_MULTIPLIER[bestHitPart] : 1;
     const damage = Math.round(weapon.damage * multiplier);
+    const previousHp = bestTarget.hp;
     bestTarget.hp = Math.max(0, bestTarget.hp - damage);
+    const actualDamage = previousHp - bestTarget.hp;
+    if (actualDamage > 0 && bestHitPart) {
+      shooter.totalDamage += actualDamage;
+      this.damageEvents.push({
+        id: crypto.randomUUID(),
+        targetId: bestTarget.id,
+        attackerId: playerId,
+        damage: actualDamage,
+        hitPart: bestHitPart,
+        isHeadshot: bestHitPart === 'head',
+        createdAt: now
+      });
+    }
     if (bestTarget.hp <= 0) {
       bestTarget.alive = false;
       bestTarget.deaths += 1;
+      bestTarget.killStreak = 0;
       bestTarget.respawnAt = now + RESPAWN_MS;
       bestTarget.invincibleUntil = null;
       bestTarget.reloadingUntil = null;
       shooter.kills += 1;
+      shooter.killStreak += 1;
+      this.killFeedEvents.push({
+        id: crypto.randomUUID(),
+        killerId: shooter.id,
+        killerName: shooter.name,
+        victimId: bestTarget.id,
+        victimName: bestTarget.name,
+        weaponId: shooter.weaponId,
+        isHeadshot: bestHitPart === 'head',
+        killStreak: shooter.killStreak,
+        createdAt: now
+      });
       this.dropHealthPickup(bestTarget.position, now);
     }
   }
@@ -409,7 +459,7 @@ export class GameRoom {
     this.state = 'result';
     this.matchEndsAt = null;
     this.healthPickups.clear();
-    this.winnerId = [...this.players.values()].sort((a, b) => b.kills - a.kills || a.deaths - b.deaths)[0]?.id ?? null;
+    this.winnerId = [...this.players.values()].sort(comparePlayersByResult)[0]?.id ?? null;
     this.broadcast();
   }
 
@@ -446,11 +496,22 @@ function nearestEnemyDistance(spawn: Vec3, enemies: PlayerState[]) {
   return Math.min(...enemies.map((enemy) => Math.hypot(spawn.x - enemy.position.x, spawn.z - enemy.position.z)));
 }
 
+function comparePlayersByResult(a: PlayerState, b: PlayerState) {
+  const kdDiff = getKdSortValue(b) - getKdSortValue(a);
+  if (kdDiff !== 0) return kdDiff;
+  return b.totalDamage - a.totalDamage;
+}
+
+function getKdSortValue(player: PlayerState) {
+  if (player.deaths === 0) return player.kills === 0 ? 0 : player.kills + 1;
+  return player.kills / player.deaths;
+}
+
 function clampArena(position: Vec3): Vec3 {
   return {
-    x: Math.max(-17.5, Math.min(17.5, position.x)),
+    x: Math.max(-22.5, Math.min(22.5, position.x)),
     y: Math.max(0, Math.min(7.5, position.y)),
-    z: Math.max(-17.5, Math.min(17.5, position.z))
+    z: Math.max(-22.5, Math.min(22.5, position.z))
   };
 }
 

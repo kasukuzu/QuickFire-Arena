@@ -16,10 +16,12 @@ type Props = {
 };
 
 const BASE_OFFSET = new THREE.Vector3(0.42, -0.34, -0.82);
-const ADS_OFFSET = new THREE.Vector3(0.05, -0.18, -0.72);
+const HOLO_ADS_OFFSET = new THREE.Vector3(0.015, -0.155, -0.72);
+const SMG_ADS_OFFSET = new THREE.Vector3(0.02, -0.16, -0.68);
+const SR_ADS_OFFSET = new THREE.Vector3(0.0, -0.64, -0.92);
 
 export function getMuzzleWorldPosition(camera: THREE.Camera, weaponId: WeaponId, ads: boolean) {
-  const offset = getWeaponLocalOffset(ads).add(getMuzzleLocalOffset(weaponId));
+  const offset = getWeaponLocalOffset(weaponId, ads).add(getMuzzleLocalOffset(weaponId));
   return offset.applyQuaternion(camera.quaternion).add(camera.position);
 }
 
@@ -34,16 +36,17 @@ export default function WeaponModel({ weaponId, ads, recoil, moving, crouching, 
     const group = groupRef.current;
     if (!group) return;
 
-    const target = getWeaponLocalOffset(ads);
+    const target = getWeaponLocalOffset(weaponId, ads);
     const bob = moving ? Math.sin(state.clock.elapsedTime * 10) * 0.025 : 0;
+    const visualRecoil = recoil * (ads ? 0.55 : 1);
     currentOffset.lerp(target, 0.22);
     const local = currentOffset
       .clone()
-      .add(new THREE.Vector3(0, bob - recoil * 0.08 + (reloading ? -0.08 : 0) + (crouching ? -0.035 : 0), recoil * 0.16));
+      .add(new THREE.Vector3(0, bob - visualRecoil * 0.08 + (reloading ? -0.08 : 0) + (crouching ? -0.035 : 0), visualRecoil * 0.16));
     group.position.copy(camera.position).add(local.applyQuaternion(camera.quaternion));
     group.quaternion.copy(camera.quaternion);
-    group.rotateX(-recoil * 0.08);
-    group.rotateZ((moving ? Math.sin(state.clock.elapsedTime * 8) * 0.018 : 0) + recoil * 0.025);
+    group.rotateX(-visualRecoil * 0.08);
+    group.rotateZ((moving && !ads ? Math.sin(state.clock.elapsedTime * 8) * 0.018 : 0) + visualRecoil * 0.025);
 
     if (flashRef.current) {
       const startedAt = Number(flashRef.current.userData.startedAt ?? -1);
@@ -121,8 +124,11 @@ function GunBox({ position, size, color }: { position: [number, number, number];
   );
 }
 
-function getWeaponLocalOffset(ads: boolean) {
-  return (ads ? ADS_OFFSET : BASE_OFFSET).clone();
+function getWeaponLocalOffset(weaponId: WeaponId, ads: boolean) {
+  if (!ads) return BASE_OFFSET.clone();
+  if (weaponId === 'sr') return SR_ADS_OFFSET.clone();
+  if (weaponId === 'smg') return SMG_ADS_OFFSET.clone();
+  return HOLO_ADS_OFFSET.clone();
 }
 
 function getMuzzleLocalOffset(weaponId: WeaponId) {
