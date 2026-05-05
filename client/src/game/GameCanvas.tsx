@@ -9,6 +9,8 @@ import HUD from './HUD';
 import ImpactEffect, { type ImpactEffectItem } from './ImpactEffect';
 import PlayerAvatar from './PlayerAvatar';
 import PlayerController from './PlayerController';
+import RemoteBulletTracers from './effects/RemoteBulletTracers';
+import RemoteMuzzleFlashes from './effects/RemoteMuzzleFlashes';
 import WeaponModel from './WeaponModel';
 import GameMap from './maps/GameMap';
 import type { ClientMessage, RoomSnapshot } from './types';
@@ -59,6 +61,8 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
         )}
         <HealthPickups pickups={snapshot.healthPickups} serverTime={snapshot.serverTime} />
         <DamageNumbers events={snapshot.damageEvents} players={snapshot.players} serverTime={snapshot.serverTime} />
+        <RemoteBulletTracers events={snapshot.shotEvents} players={snapshot.players} localPlayerId={playerId} serverTime={snapshot.serverTime} />
+        <RemoteMuzzleFlashes events={snapshot.shotEvents} players={snapshot.players} localPlayerId={playerId} serverTime={snapshot.serverTime} />
         <BulletTracer tracers={tracers} />
         <ImpactEffect impacts={impacts} />
         <WeaponModel

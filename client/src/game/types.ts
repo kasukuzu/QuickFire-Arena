@@ -58,6 +58,10 @@ export type ShotEvent = {
   shooterId: string;
   weaponId: WeaponId;
   position: Vec3;
+  origin: Vec3;
+  direction: Vec3;
+  endPoint: Vec3;
+  isHit: boolean;
   createdAt: number;
 };
 

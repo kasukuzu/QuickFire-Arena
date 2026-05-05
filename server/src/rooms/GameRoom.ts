@@ -171,7 +171,7 @@ export class GameRoom {
     }
 
     if (message.type === 'shoot') {
-      this.shoot(playerId, message.origin, normalize(message.direction), message.hitPlayerId, message.hitPart);
+      this.shoot(playerId, message.origin, normalize(message.direction), message.hitPlayerId, message.hitPart, message.impactPoint);
     }
   }
 
@@ -321,7 +321,14 @@ export class GameRoom {
     player.reloadingUntil = Date.now() + weapon.reloadMs;
   }
 
-  private shoot(playerId: string, origin: Vec3, direction: Vec3, claimedHitPlayerId?: string | null, claimedHitPart?: HitPart | null) {
+  private shoot(
+    playerId: string,
+    origin: Vec3,
+    direction: Vec3,
+    claimedHitPlayerId?: string | null,
+    claimedHitPart?: HitPart | null,
+    impactPoint?: Vec3
+  ) {
     const shooter = this.players.get(playerId);
     const client = this.clients.get(playerId);
     const now = Date.now();
@@ -330,13 +337,6 @@ export class GameRoom {
     if (now - client.lastShotAt < weapon.fireIntervalMs || shooter.ammo <= 0) return;
     client.lastShotAt = now;
     shooter.ammo -= 1;
-    this.shotEvents.push({
-      id: crypto.randomUUID(),
-      shooterId: playerId,
-      weaponId: shooter.weaponId,
-      position: { ...shooter.position },
-      createdAt: now
-    });
 
     let bestTarget: PlayerState | null = null;
     let bestDistance = Number.POSITIVE_INFINITY;
@@ -354,6 +354,24 @@ export class GameRoom {
         bestHitPart = hit.hitPart;
       }
     }
+
+    const validHit = Boolean(
+      bestTarget &&
+      claimedHitPlayerId !== null &&
+      !isInvincible(bestTarget, now) &&
+      (!claimedHitPlayerId || bestTarget.id === claimedHitPlayerId)
+    );
+    this.shotEvents.push({
+      id: crypto.randomUUID(),
+      shooterId: playerId,
+      weaponId: shooter.weaponId,
+      position: { ...shooter.position },
+      origin,
+      direction,
+      endPoint: impactPoint ?? addScaled(origin, direction, weapon.range),
+      isHit: validHit,
+      createdAt: now
+    });
 
     if (!bestTarget || claimedHitPlayerId === null || isInvincible(bestTarget, now)) return;
     if (claimedHitPlayerId && bestTarget.id !== claimedHitPlayerId) return;
@@ -518,6 +536,14 @@ function clampArena(position: Vec3): Vec3 {
 function normalize(v: Vec3): Vec3 {
   const length = Math.hypot(v.x, v.y, v.z) || 1;
   return { x: v.x / length, y: v.y / length, z: v.z / length };
+}
+
+function addScaled(origin: Vec3, direction: Vec3, scale: number): Vec3 {
+  return {
+    x: origin.x + direction.x * scale,
+    y: origin.y + direction.y * scale,
+    z: origin.z + direction.z * scale
+  };
 }
 
 function rayPlayerHitboxesHit(origin: Vec3, direction: Vec3, target: PlayerState) {
