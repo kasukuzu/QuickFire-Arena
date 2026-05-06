@@ -57,7 +57,7 @@ export class GameRoom {
     return this.players.size;
   }
 
-  addClient(socket: WebSocket, name: string, weaponId: WeaponId) {
+  addClient(socket: WebSocket, name: string) {
     if (this.players.size >= MAX_PLAYERS) {
       this.send(socket, { type: 'error', message: 'Room is full.' });
       return null;
@@ -71,14 +71,13 @@ export class GameRoom {
     const isHost = this.players.size === 0;
     if (isHost) this.hostId = id;
 
-    const weapon = WEAPONS[weaponId] ?? WEAPONS.ar;
     const spawns = getSpawns(this.activeMapId);
     const spawn = spawns[this.players.size % spawns.length];
     const player: PlayerState = {
       id,
       name: name.trim().slice(0, 18) || `Player ${this.players.size + 1}`,
       isHost,
-      weaponId: weapon.id,
+      weaponId: null,
       mapVote: null,
       isReady: false,
       characterId: 0,
@@ -86,7 +85,7 @@ export class GameRoom {
       rotationY: spawn.rotationY,
       pitch: 0,
       hp: 100,
-      ammo: weapon.magazineSize,
+      ammo: 0,
       kills: 0,
       deaths: 0,
       totalDamage: 0,
@@ -250,6 +249,7 @@ export class GameRoom {
     const characterIds = shuffle([0, 1, 2, 3, 4, 5, 6, 7]);
     const spawns = getSpawns(this.activeMapId);
     for (const player of this.players.values()) {
+      if (!player.weaponId) continue;
       const weapon = WEAPONS[player.weaponId];
       Object.assign(player, {
         position: toVec3(spawns[index % spawns.length]),
@@ -299,6 +299,10 @@ export class GameRoom {
         this.respawn(player);
       }
       if (player.reloadingUntil && now >= player.reloadingUntil) {
+        if (!player.weaponId) {
+          player.reloadingUntil = null;
+          continue;
+        }
         player.ammo = WEAPONS[player.weaponId].magazineSize;
         player.reloadingUntil = null;
       }
@@ -315,7 +319,7 @@ export class GameRoom {
   }
 
   private reload(player: PlayerState) {
-    if (!player.alive || player.reloadingUntil) return;
+    if (!player.alive || player.reloadingUntil || !player.weaponId) return;
     const weapon = WEAPONS[player.weaponId];
     if (player.ammo >= weapon.magazineSize) return;
     player.reloadingUntil = Date.now() + weapon.reloadMs;
@@ -332,7 +336,7 @@ export class GameRoom {
     const shooter = this.players.get(playerId);
     const client = this.clients.get(playerId);
     const now = Date.now();
-    if (!shooter || !client || !shooter.alive || shooter.reloadingUntil || isInvincible(shooter, now)) return;
+    if (!shooter || !client || !shooter.weaponId || !shooter.alive || shooter.reloadingUntil || isInvincible(shooter, now)) return;
     const weapon = WEAPONS[shooter.weaponId];
     if (now - client.lastShotAt < weapon.fireIntervalMs || shooter.ammo <= 0) return;
     client.lastShotAt = now;
@@ -439,6 +443,7 @@ export class GameRoom {
   }
 
   private respawn(player: PlayerState) {
+    if (!player.weaponId) return;
     const weapon = WEAPONS[player.weaponId];
     const now = Date.now();
     const spawn = this.pickSafeSpawn(player.id);

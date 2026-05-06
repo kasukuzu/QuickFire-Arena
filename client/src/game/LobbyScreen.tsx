@@ -32,7 +32,7 @@ export default function LobbyScreen({ snapshot, playerId, onSelectWeapon, onSele
               {snapshot.players.map((player) => (
                 <div className="player-row" key={player.id}>
                   <span>{player.name}</span>
-                  <span>{player.isHost ? 'Host' : WEAPONS[player.weaponId].name}</span>
+                  <span>{player.isHost ? 'Host' : player.weaponId ? WEAPONS[player.weaponId].name : 'Weapon未選択'}</span>
                 </div>
               ))}
             </div>

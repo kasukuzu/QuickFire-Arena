@@ -2,7 +2,7 @@ import { weaponList } from '../../game/weapons';
 import type { WeaponId } from '../../game/types';
 
 type Props = {
-  selectedWeapon: WeaponId;
+  selectedWeapon: WeaponId | null;
   onSelect: (weaponId: WeaponId) => void;
 };
 

@@ -25,7 +25,7 @@ wss.on('connection', (socket) => {
     if (message.type === 'createRoom') {
       const room = new GameRoom(makeRoomId());
       rooms.set(room.id, room);
-      playerId = room.addClient(socket, message.name, message.weaponId);
+      playerId = room.addClient(socket, message.name);
       if (playerId) playerRooms.set(playerId, room);
       return;
     }
@@ -36,7 +36,7 @@ wss.on('connection', (socket) => {
         socket.send(JSON.stringify({ type: 'error', message: 'Room not found.' }));
         return;
       }
-      playerId = room.addClient(socket, message.name, message.weaponId);
+      playerId = room.addClient(socket, message.name);
       if (playerId) playerRooms.set(playerId, room);
       return;
     }

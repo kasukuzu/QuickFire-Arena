@@ -54,7 +54,8 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
   const adsMouseDown = useRef(false);
   const adsKeyDown = useRef(false);
 
-  const weapon = WEAPONS[player.weaponId];
+  const weaponId = player.weaponId ?? 'ar';
+  const weapon = WEAPONS[weaponId];
   const euler = useMemo(() => new THREE.Euler(0, 0, 0, 'YXZ'), []);
   const direction = useMemo(() => new THREE.Vector3(), []);
   playerRef.current = player;
@@ -104,7 +105,7 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
         updateAdsInput();
       }
       if (event.button === 0) {
-        if (canShootRef.current()) {
+        if (canShootRef.current() && playerRef.current.weaponId) {
           weaponSystemRef.current.startFire(playerRef.current.weaponId, () => fireRef.current());
         }
       }
@@ -189,7 +190,7 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
     }
     if (!canAds()) weaponSystem.stopAds();
 
-    weaponSystem.updateAutomaticFire(player.weaponId, canShoot(), fire);
+    weaponSystem.updateAutomaticFire(weaponId, canShoot(), fire);
 
     const baseSpeed = player.weaponId === 'smg' ? 7.2 : 6.3;
     const speed = baseSpeed * (crouching ? CROUCH_SPEED_MULTIPLIER : 1);
@@ -257,6 +258,7 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
     return (
       snapshot.state === 'playing' &&
       player.alive &&
+      Boolean(player.weaponId) &&
       player.ammo > 0 &&
       !player.reloadingUntil &&
       !(player.invincibleUntil && player.invincibleUntil > snapshot.serverTime)
@@ -276,6 +278,7 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
 
   function fire() {
     if (!canShoot()) return;
+    if (!player.weaponId) return;
     const shotDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).normalize();
     const origin = camera.position.clone();
     const visualHit = getVisualHit(origin, shotDirection, snapshot.players, player.id, weapon.range, activeMapId);

@@ -38,7 +38,7 @@ export default function ResultScreen({ snapshot, onLeave }: Props) {
                 <td>{player.deaths}</td>
                 <td>{getKdDisplay(player)}</td>
                 <td>{player.totalDamage}</td>
-                <td>{WEAPONS[player.weaponId].name}</td>
+                <td>{player.weaponId ? WEAPONS[player.weaponId].name : '-'}</td>
               </tr>
             ))}
           </tbody>

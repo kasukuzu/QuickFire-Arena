@@ -46,7 +46,7 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
     window.setTimeout(() => setImpacts((current) => current.filter((item) => item.id !== impactItem.id)), 220);
   }, []);
 
-  if (!me) return null;
+  if (!me || !me.weaponId) return null;
 
   return (
     <main className="game-screen">

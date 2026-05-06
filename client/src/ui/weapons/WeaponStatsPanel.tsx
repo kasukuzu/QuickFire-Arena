@@ -3,10 +3,21 @@ import type { WeaponId } from '../../game/types';
 import WeaponPreview from './WeaponPreview';
 
 type Props = {
-  weaponId: WeaponId;
+  weaponId: WeaponId | null;
 };
 
 export default function WeaponStatsPanel({ weaponId }: Props) {
+  if (!weaponId) {
+    return (
+      <aside className="weapon-detail-panel empty">
+        <div className="weapon-detail-copy">
+          <p className="eyebrow">Selected Weapon</p>
+          <h3>未選択</h3>
+          <p>ロビーで使用する武器を選択してください。</p>
+        </div>
+      </aside>
+    );
+  }
   const weapon = WEAPONS[weaponId];
   const bars = [
     ['Damage', weapon.statsBarValues.damage, weapon.damage.toString()],

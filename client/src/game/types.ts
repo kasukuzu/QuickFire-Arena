@@ -14,7 +14,7 @@ export type PlayerState = {
   id: string;
   name: string;
   isHost: boolean;
-  weaponId: WeaponId;
+  weaponId: WeaponId | null;
   mapVote: MapSelectionId | null;
   isReady: boolean;
   characterId: number;
@@ -102,8 +102,8 @@ export type RoomSnapshot = {
 };
 
 export type ClientMessage =
-  | { type: 'createRoom'; name: string; weaponId: WeaponId }
-  | { type: 'joinRoom'; roomId: string; name: string; weaponId: WeaponId }
+  | { type: 'createRoom'; name: string }
+  | { type: 'joinRoom'; roomId: string; name: string }
   | { type: 'selectWeapon'; weaponId: WeaponId }
   | { type: 'weaponSelect'; weaponId: WeaponId }
   | { type: 'mapSelect'; mapId: MapSelectionId }

@@ -80,8 +80,28 @@ td {
   align-items: center;
   gap: 42px;
   background:
-    linear-gradient(rgba(21, 24, 23, 0.4), rgba(21, 24, 23, 0.85)),
-    url("https://images.unsplash.com/photo-1535223289827-42f1e9919769?auto=format&fit=crop&w=1800&q=80") center/cover;
+    radial-gradient(circle at 18% 18%, rgba(63, 116, 180, 0.4), transparent 34%),
+    radial-gradient(circle at 78% 28%, rgba(190, 94, 45, 0.36), transparent 30%),
+    linear-gradient(135deg, rgba(9, 12, 16, 0.72), rgba(17, 18, 24, 0.94)),
+    linear-gradient(120deg, #101418 0%, #1b1f2b 42%, #201815 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.title-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 0 16%, rgba(118, 134, 154, 0.12) 16% 17%, transparent 17% 34%, rgba(212, 173, 88, 0.14) 34% 35%, transparent 35%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 84px);
+  filter: blur(0.2px);
+  opacity: 0.55;
+}
+
+.title-screen > * {
+  position: relative;
+  z-index: 1;
 }
 
 .title-copy h1,
@@ -96,6 +116,7 @@ td {
   max-width: 520px;
   color: #e1e4da;
   font-size: 18px;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
 }
 
 .panel-screen {
@@ -115,6 +136,9 @@ td {
 .title-panel {
   display: grid;
   gap: 18px;
+  border-color: rgba(212, 173, 88, 0.35);
+  background: rgba(18, 22, 23, 0.78);
+  backdrop-filter: blur(12px);
 }
 
 .panel-header {

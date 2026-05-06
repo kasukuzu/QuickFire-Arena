@@ -17,7 +17,7 @@ export default function HUD({ snapshot, player, scoreboardOpen, ads, playerId }:
   const remaining = snapshot.matchEndsAt ? Math.max(0, snapshot.matchEndsAt - snapshot.serverTime) : 0;
   const minutes = Math.floor(remaining / 60000);
   const seconds = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
-  const weapon = WEAPONS[player.weaponId];
+  const weapon = player.weaponId ? WEAPONS[player.weaponId] : null;
   const respawnMs = player.respawnAt ? Math.max(0, player.respawnAt - snapshot.serverTime) : 0;
   const invincibleMs = player.invincibleUntil ? Math.max(0, player.invincibleUntil - snapshot.serverTime) : 0;
   const ranking = [...snapshot.players].sort((a, b) => b.kills - a.kills || a.deaths - b.deaths);
@@ -29,10 +29,10 @@ export default function HUD({ snapshot, player, scoreboardOpen, ads, playerId }:
         <span>{getActiveMapName(snapshot.activeMapId)}</span>
         <span>{player.kills} K / {player.deaths} D</span>
       </div>
-      {ads ? <ADSOverlay weaponId={player.weaponId} ads={ads} /> : <div className="crosshair" />}
+      {ads && player.weaponId ? <ADSOverlay weaponId={player.weaponId} ads={ads} /> : <div className="crosshair" />}
       <div className="status">
         <span>HP {player.hp}</span>
-        <span>{weapon.name} {player.ammo}/{weapon.magazineSize}</span>
+        <span>{weapon ? `${weapon.name} ${player.ammo}/${weapon.magazineSize}` : 'Weapon 未選択'}</span>
       </div>
       {!player.alive ? (
         <div className="respawn">Respawn in {Math.ceil(respawnMs / 1000)}s</div>

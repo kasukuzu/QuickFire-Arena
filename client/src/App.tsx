@@ -5,7 +5,6 @@ import LobbyScreen from './screens/LobbyScreen';
 import MapSelectedScreen from './screens/MapSelectedScreen';
 import MapRouletteScreen from './screens/MapRouletteScreen';
 import ResultScreen from './game/ResultScreen';
-import { weaponList } from './game/WeaponSystem';
 import type { ClientMessage, MapSelectionId, RoomSnapshot, ServerMessage, WeaponId } from './game/types';
 
 const WS_URL = import.meta.env.VITE_WS_URL ?? 'ws://localhost:2567';
@@ -14,7 +13,6 @@ export default function App() {
   const socketRef = useRef<WebSocket | null>(null);
   const [name, setName] = useState(`Player${Math.floor(Math.random() * 900 + 100)}`);
   const [roomIdInput, setRoomIdInput] = useState('');
-  const [selectedWeapon, setSelectedWeapon] = useState<WeaponId>('ar');
   const [playerId, setPlayerId] = useState('');
   const [snapshot, setSnapshot] = useState<RoomSnapshot | null>(null);
   const [error, setError] = useState('');
@@ -62,7 +60,6 @@ export default function App() {
         snapshot={snapshot}
         playerId={playerId}
         onSelectWeapon={(weaponId) => {
-          setSelectedWeapon(weaponId);
           send({ type: 'weaponSelect', weaponId });
         }}
         onSelectMap={(mapId: MapSelectionId) => send({ type: 'mapVoteSelect', mapId })}
@@ -105,7 +102,7 @@ export default function App() {
       <section className="title-copy">
         <p className="eyebrow">Prototype</p>
         <h1>QuickFire Arena</h1>
-        <p>ローカルの2タブで試せる、最大8人のリアルタイムFPSデスマッチ。</p>
+        <p>フレンドとルームコードで参加できる、最大8人のリアルタイムFPSデスマッチ。</p>
       </section>
 
       <section className="panel title-panel">
@@ -124,27 +121,12 @@ export default function App() {
           />
         </label>
 
-        <div>
-          <span className="label">Weapon</span>
-          <div className="segmented">
-            {weaponList.map((weapon) => (
-              <button
-                className={selectedWeapon === weapon.id ? 'active' : ''}
-                key={weapon.id}
-                onClick={() => setSelectedWeapon(weapon.id)}
-              >
-                {weapon.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
         <div className="button-row">
-          <button className="primary" onClick={() => connect({ type: 'createRoom', name, weaponId: selectedWeapon })}>
+          <button className="primary" onClick={() => connect({ type: 'createRoom', name })}>
             Create Room
           </button>
           <button
-            onClick={() => connect({ type: 'joinRoom', roomId: roomIdInput, name, weaponId: selectedWeapon })}
+            onClick={() => connect({ type: 'joinRoom', roomId: roomIdInput, name })}
             disabled={roomIdInput.trim().length < 5}
           >
             Join Room
