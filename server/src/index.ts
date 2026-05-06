@@ -7,7 +7,16 @@ const PORT = Number(process.env.PORT ?? 2567);
 const rooms = new Map<string, GameRoom>();
 const playerRooms = new Map<string, GameRoom>();
 
-const server = createServer();
+const server = createServer((req, res) => {
+  if (req.url === '/' || req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('QuickFire Arena server is running');
+    return;
+  }
+
+  res.writeHead(404, { 'Content-Type': 'text/plain' });
+  res.end('Not Found');
+});
 const wss = new WebSocketServer({ server });
 
 wss.on('connection', (socket) => {
@@ -54,8 +63,8 @@ wss.on('connection', (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`QuickFire Arena server listening on ws://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`QuickFire Arena server listening on port ${PORT}`);
 });
 
 function makeRoomId() {
