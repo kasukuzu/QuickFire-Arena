@@ -1,9 +1,11 @@
+import { useEffect, useMemo, useRef } from 'react';
 import { WEAPONS } from './WeaponSystem';
 import ADSOverlay from './ads/ADSOverlay';
 import KillFeed from './ui/KillFeed';
 import KillStreakMessage from './ui/KillStreakMessage';
 import { getActiveMapName } from './maps/mapDefinitions';
-import type { PlayerState, RoomSnapshot } from './types';
+import { playHitSound, playHurtSound, playReloadDoneSound, playReloadSound } from './sound';
+import type { DamageEvent, PlayerState, RoomSnapshot } from './types';
 
 type Props = {
   snapshot: RoomSnapshot;
@@ -21,19 +23,65 @@ export default function HUD({ snapshot, player, scoreboardOpen, ads, playerId }:
   const respawnMs = player.respawnAt ? Math.max(0, player.respawnAt - snapshot.serverTime) : 0;
   const invincibleMs = player.invincibleUntil ? Math.max(0, player.invincibleUntil - snapshot.serverTime) : 0;
   const ranking = [...snapshot.players].sort((a, b) => b.kills - a.kills || a.deaths - b.deaths);
+  const hpPercent = Math.max(0, Math.min(100, player.hp));
+  const hpTone = hpPercent <= 20 ? 'danger' : hpPercent <= 50 ? 'warning' : 'healthy';
+  const reloadProgress = getReloadProgress(player, weapon, snapshot.serverTime);
+  const isReloading = reloadProgress !== null;
+  const recentHit = useMemo(
+    () => latestRecent(snapshot.damageEvents, snapshot.serverTime, (event) => event.attackerId === playerId, 240),
+    [playerId, snapshot.damageEvents, snapshot.serverTime]
+  );
+  const recentDamageEvents = useMemo(
+    () => snapshot.damageEvents.filter((event) => event.targetId === playerId && snapshot.serverTime - event.createdAt <= 900),
+    [playerId, snapshot.damageEvents, snapshot.serverTime]
+  );
+
+  useCombatAudio(snapshot.damageEvents, playerId, player.reloadingUntil, snapshot.serverTime);
 
   return (
     <div className="hud">
-      <div className="topbar">
-        <span>{minutes}:{seconds}</span>
-        <span>{getActiveMapName(snapshot.activeMapId)}</span>
-        <span>{player.kills} K / {player.deaths} D</span>
+      <LowHealthOverlay hp={player.hp} />
+      <DamageOverlay events={recentDamageEvents} player={player} players={snapshot.players} serverTime={snapshot.serverTime} />
+      <HitMarker event={recentHit} serverTime={snapshot.serverTime} />
+
+      <div className="hud-topbar">
+        <div className="hud-chip timer">{minutes}:{seconds}</div>
+        <div className="hud-chip map">{getActiveMapName(snapshot.activeMapId)}</div>
+        <div className="hud-chip score">{player.kills} K / {player.deaths} D</div>
       </div>
       {ads && player.weaponId ? <ADSOverlay weaponId={player.weaponId} ads={ads} /> : <div className="crosshair" />}
-      <div className="status">
-        <span>HP {player.hp}</span>
-        <span>{weapon ? `${weapon.name} ${player.ammo}/${weapon.magazineSize}` : 'Weapon 未選択'}</span>
+
+      <div className="hud-bottom">
+        <section className={`hud-card hp-card ${hpTone}`}>
+          <div className="hud-card-header">
+            <span>HP</span>
+            <strong>{player.hp}</strong>
+          </div>
+          <div className="hp-track">
+            <div className="hp-fill" style={{ width: `${hpPercent}%` }} />
+          </div>
+        </section>
+
+        <section className={`hud-card ammo-card ${isReloading ? 'reloading' : ''} ${weapon && player.ammo === 0 ? 'empty' : ''}`}>
+          <div className="weapon-label">{weapon ? weapon.name : 'Weapon 未選択'}</div>
+          <div className="ammo-line">
+            <strong>{player.ammo}</strong>
+            <span>/</span>
+            <span>{weapon?.magazineSize ?? '-'}</span>
+          </div>
+          {isReloading ? (
+            <div className="reload-block">
+              <div className="reload-label">Reloading...</div>
+              <div className="reload-track">
+                <div className="reload-fill" style={{ width: `${reloadProgress * 100}%` }} />
+              </div>
+            </div>
+          ) : player.ammo === 0 && weapon ? (
+            <div className="reload-label empty">Press R to reload</div>
+          ) : null}
+        </section>
       </div>
+
       {!player.alive ? (
         <div className="respawn">Respawn in {Math.ceil(respawnMs / 1000)}s</div>
       ) : null}
@@ -55,4 +103,114 @@ export default function HUD({ snapshot, player, scoreboardOpen, ads, playerId }:
       ) : null}
     </div>
   );
+}
+
+function useCombatAudio(damageEvents: DamageEvent[], playerId: string, reloadingUntil: number | null, serverTime: number) {
+  const seenDamageEvents = useRef(new Set<string>());
+  const wasReloading = useRef(false);
+
+  useEffect(() => {
+    for (const event of damageEvents) {
+      if (seenDamageEvents.current.has(event.id)) continue;
+      seenDamageEvents.current.add(event.id);
+      if (event.attackerId === playerId) playHitSound(event.isHeadshot, event.isHeadshot ? 0.72 : 0.58);
+      if (event.targetId === playerId) playHurtSound(event.damage >= 45 ? 0.72 : 0.5);
+    }
+  }, [damageEvents, playerId]);
+
+  useEffect(() => {
+    const isReloading = Boolean(reloadingUntil && reloadingUntil > serverTime);
+    if (isReloading && !wasReloading.current) playReloadSound(0.62);
+    if (!isReloading && wasReloading.current) playReloadDoneSound(0.34);
+    wasReloading.current = isReloading;
+  }, [reloadingUntil, serverTime]);
+}
+
+function getReloadProgress(player: PlayerState, weapon: typeof WEAPONS[keyof typeof WEAPONS] | null, serverTime: number) {
+  if (!weapon || !player.reloadingUntil || player.reloadingUntil <= serverTime) return null;
+  const startedAt = player.reloadingUntil - weapon.reloadMs;
+  return Math.max(0, Math.min(1, (serverTime - startedAt) / weapon.reloadMs));
+}
+
+function latestRecent(events: DamageEvent[], serverTime: number, predicate: (event: DamageEvent) => boolean, maxAgeMs: number) {
+  return events
+    .filter((event) => predicate(event) && serverTime - event.createdAt <= maxAgeMs)
+    .sort((a, b) => b.createdAt - a.createdAt)[0] ?? null;
+}
+
+function HitMarker({ event, serverTime }: { event: DamageEvent | null; serverTime: number }) {
+  if (!event) return null;
+  const age = serverTime - event.createdAt;
+  const alpha = Math.max(0, 1 - age / 240);
+  const className = event.isHeadshot ? 'hit-marker headshot' : 'hit-marker';
+  return (
+    <div className={className} style={{ opacity: alpha }}>
+      <span />
+      <span />
+      <span />
+      <span />
+    </div>
+  );
+}
+
+function DamageOverlay({
+  events,
+  player,
+  players,
+  serverTime
+}: {
+  events: DamageEvent[];
+  player: PlayerState;
+  players: PlayerState[];
+  serverTime: number;
+}) {
+  if (events.length === 0) return null;
+
+  return (
+    <div className="damage-indicators">
+      <div className="damage-flash" style={{ opacity: getDamageFlashOpacity(events, serverTime) }} />
+      {events.map((event) => {
+        const attacker = players.find((candidate) => candidate.id === event.attackerId);
+        const angle = attacker ? getDamageAngle(player, attacker) : 0;
+        const age = serverTime - event.createdAt;
+        const opacity = Math.max(0, 1 - age / 900);
+        return (
+          <div
+            key={event.id}
+            className={event.damage >= 45 ? 'damage-arrow heavy' : 'damage-arrow'}
+            style={{ transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-38vh)`, opacity }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function getDamageFlashOpacity(events: DamageEvent[], serverTime: number) {
+  return Math.min(
+    0.52,
+    events.reduce((strongest, event) => {
+      const age = serverTime - event.createdAt;
+      const base = event.damage >= 45 ? 0.52 : 0.36;
+      return Math.max(strongest, base * Math.max(0, 1 - age / 650));
+    }, 0)
+  );
+}
+
+function getDamageAngle(player: PlayerState, attacker: PlayerState) {
+  const dx = attacker.position.x - player.position.x;
+  const dz = attacker.position.z - player.position.z;
+  const worldAngle = Math.atan2(dx, -dz);
+  const relative = worldAngle - player.rotationY;
+  return THREE_RAD_TO_DEG(relative);
+}
+
+function THREE_RAD_TO_DEG(radians: number) {
+  return radians * (180 / Math.PI);
+}
+
+function LowHealthOverlay({ hp }: { hp: number }) {
+  if (hp > 30) return null;
+  const strength = hp <= 20 ? 0.36 : 0.22;
+  return <div className="low-health-overlay" style={{ opacity: strength }} />;
 }
