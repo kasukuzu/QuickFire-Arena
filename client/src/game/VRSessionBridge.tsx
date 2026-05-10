@@ -1,5 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { MAPS } from './maps/mapDefinitions';
@@ -65,6 +65,7 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
   const weaponSystemRef = useRef(weaponSystem);
   const flashStartedAt = useRef(-1);
   const lastShotPulse = useRef(0);
+  const muzzleRef = useRef<THREE.Group>(null);
   const [flashVisible, setFlashVisible] = useState(false);
 
   playerRef.current = player;
@@ -150,13 +151,15 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
   }
 
   function movePlayer(stickX: number, stickY: number, speed: number, height: number, delta: number) {
-    const forwardAmount = -stickY;
-    const strafeAmount = stickX;
-    const horizontal = new THREE.Vector3(strafeAmount, 0, -forwardAmount);
+    const forward = getHeadForward();
+    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+    const horizontal = new THREE.Vector3()
+      .addScaledVector(forward, -stickY)
+      .addScaledVector(right, stickX);
     const previousY = position.current.y;
 
     if (horizontal.lengthSq() > 0.01) {
-      horizontal.normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), getHeadYaw());
+      horizontal.normalize();
       horizontal.multiplyScalar(speed * delta);
       const next = position.current.clone().add(horizontal);
       position.current.copy(resolveHorizontalCollision(next, height, activeMapId));
@@ -205,8 +208,9 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
 
   function fire() {
     if (!canShoot()) return;
-    const origin = getMuzzleWorldPosition(rightController, weaponId);
-    const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(rightController.getWorldQuaternion(new THREE.Quaternion())).normalize();
+    const muzzlePose = getMuzzleWorldPose(muzzleRef);
+    if (!muzzlePose) return;
+    const { origin, direction } = muzzlePose;
     const visualHit = getVisualHit(origin, direction, snapshot.players, player.id, weapon.range, activeMapId);
     flashStartedAt.current = performance.now();
     setFlashVisible(true);
@@ -249,9 +253,16 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
   }
 
   function getHeadYaw() {
-    const xrCamera = gl.xr.isPresenting ? gl.xr.getCamera() : camera;
-    const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(xrCamera.quaternion);
+    const direction = getHeadForward();
     return Math.atan2(direction.x, -direction.z);
+  }
+
+  function getHeadForward() {
+    const direction = new THREE.Vector3();
+    camera.getWorldDirection(direction);
+    direction.y = 0;
+    if (direction.lengthSq() < 0.0001) direction.set(0, 0, -1);
+    return direction.normalize();
   }
 
   function updateFlash() {
@@ -269,16 +280,29 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
       <primitive object={rightController} />
       <primitive object={leftGrip} />
       <primitive object={rightGrip}>
-        <VRWeaponModel weaponId={weaponId} ads={weaponSystem.ads} recoil={weaponSystem.recoil} flashVisible={flashVisible} />
+        <VRWeaponModel weaponId={weaponId} ads={weaponSystem.ads} recoil={weaponSystem.recoil} flashVisible={flashVisible} muzzleRef={muzzleRef} />
       </primitive>
     </group>
   );
 }
 
-function VRWeaponModel({ weaponId, ads, recoil, flashVisible }: { weaponId: keyof typeof WEAPONS; ads: boolean; recoil: number; flashVisible: boolean }) {
+function VRWeaponModel({
+  weaponId,
+  ads,
+  recoil,
+  flashVisible,
+  muzzleRef
+}: {
+  weaponId: keyof typeof WEAPONS;
+  ads: boolean;
+  recoil: number;
+  flashVisible: boolean;
+  muzzleRef: RefObject<THREE.Group | null>;
+}) {
   const weapon = WEAPONS[weaponId];
   const scale = weaponId === 'sr' ? 1.15 : weaponId === 'smg' ? 0.82 : 1;
   const zRecoil = recoil * 0.04;
+  const muzzleZ = getVRMuzzleZ(weaponId);
   return (
     <group position={[0.06, -0.04, -0.16 + zRecoil]} rotation={[THREE.MathUtils.degToRad(-10), 0, 0]} scale={scale} userData={{ type: 'weaponModel' }}>
       <mesh position={[0, 0, -0.25]}>
@@ -303,10 +327,12 @@ function VRWeaponModel({ weaponId, ads, recoil, flashVisible }: { weaponId: keyo
           <meshStandardMaterial color="#111414" roughness={0.7} />
         </mesh>
       ) : null}
-      <mesh position={[0, 0, getVRMuzzleZ(weaponId)]} visible={flashVisible} scale={weapon.muzzleScale}>
-        <sphereGeometry args={[0.07, 8, 8]} />
-        <meshBasicMaterial color={weaponId === 'sr' ? '#ffd27a' : '#fff1a6'} transparent opacity={0.9} />
-      </mesh>
+      <group ref={muzzleRef} position={[0, 0, muzzleZ]}>
+        <mesh visible={flashVisible} scale={weapon.muzzleScale}>
+          <sphereGeometry args={[0.07, 8, 8]} />
+          <meshBasicMaterial color={weaponId === 'sr' ? '#ffd27a' : '#fff1a6'} transparent opacity={0.9} />
+        </mesh>
+      </group>
     </group>
   );
 }
@@ -352,13 +378,20 @@ function applyDeadzone(value: number) {
   return Math.abs(value) < 0.16 ? 0 : value;
 }
 
-function getMuzzleWorldPosition(controller: THREE.Group, weaponId: keyof typeof WEAPONS) {
-  const local = new THREE.Vector3(0.06, -0.04, getVRMuzzleZ(weaponId));
-  return controller.localToWorld(local);
-}
-
 function getVRMuzzleZ(weaponId: keyof typeof WEAPONS) {
   return weaponId === 'sr' ? -0.92 : weaponId === 'ar' ? -0.7 : -0.54;
+}
+
+function getMuzzleWorldPose(muzzleRef: RefObject<THREE.Group | null>) {
+  const muzzle = muzzleRef.current;
+  if (!muzzle) return null;
+  const origin = new THREE.Vector3();
+  const direction = new THREE.Vector3(0, 0, -1);
+  const quaternion = new THREE.Quaternion();
+  muzzle.getWorldPosition(origin);
+  muzzle.getWorldQuaternion(quaternion);
+  direction.applyQuaternion(quaternion).normalize();
+  return { origin, direction };
 }
 
 function getVisualHit(
