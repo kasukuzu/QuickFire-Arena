@@ -166,7 +166,8 @@ td {
 }
 
 .button-row,
-.segmented {
+.segmented,
+.mode-switch {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
@@ -174,6 +175,11 @@ td {
 
 .segmented {
   grid-template-columns: repeat(3, 1fr);
+}
+
+.mode-switch {
+  width: min(360px, 100%);
+  margin-top: 22px;
 }
 
 .segmented .active,
@@ -1198,6 +1204,33 @@ td {
   color: rgba(244, 242, 234, 0.72);
   font-size: 12px;
   pointer-events: none;
+}
+
+.vr-mode-hint {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  display: grid;
+  gap: 3px;
+  max-width: min(420px, calc(100% - 36px));
+  border: 1px solid rgba(212, 173, 88, 0.32);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: rgba(7, 9, 11, 0.68);
+  color: rgba(244, 242, 234, 0.84);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.vr-mode-hint strong {
+  color: #ffe08a;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.quickfire-vr-button {
+  z-index: 50 !important;
 }
 
 .pointer-start-overlay,

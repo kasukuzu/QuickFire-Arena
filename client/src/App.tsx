@@ -8,6 +8,7 @@ import ResultScreen from './game/ResultScreen';
 import type { ClientMessage, MapSelectionId, RoomSnapshot, ServerMessage, WeaponId } from './game/types';
 
 const WS_URL = import.meta.env.VITE_WS_URL ?? 'ws://localhost:2567';
+const initialMode = new URLSearchParams(window.location.search).get('mode') === 'vr' ? 'vr' : 'pc';
 
 export default function App() {
   const socketRef = useRef<WebSocket | null>(null);
@@ -17,6 +18,7 @@ export default function App() {
   const [snapshot, setSnapshot] = useState<RoomSnapshot | null>(null);
   const [error, setError] = useState('');
   const [scoreboardOpen, setScoreboardOpen] = useState(false);
+  const [playMode, setPlayMode] = useState<'pc' | 'vr'>(initialMode);
   const intentionalCloseRef = useRef(false);
 
   const connected = useMemo(() => Boolean(playerId && snapshot), [playerId, snapshot]);
@@ -94,6 +96,7 @@ export default function App() {
         scoreboardOpen={scoreboardOpen}
         onScoreboard={setScoreboardOpen}
         onLeave={leave}
+        vrMode={playMode === 'vr'}
       />
     );
   }
@@ -108,6 +111,26 @@ export default function App() {
         <p className="eyebrow">Prototype</p>
         <h1>QuickFire Arena</h1>
         <p>フレンドとルームコードで参加できる、最大8人のリアルタイムFPSデスマッチ。</p>
+        <div className="mode-switch">
+          <button
+            className={playMode === 'pc' ? 'primary' : ''}
+            onClick={() => {
+              setPlayMode('pc');
+              window.history.replaceState(null, '', window.location.pathname);
+            }}
+          >
+            PC Mode
+          </button>
+          <button
+            className={playMode === 'vr' ? 'primary' : ''}
+            onClick={() => {
+              setPlayMode('vr');
+              window.history.replaceState(null, '', `${window.location.pathname}?mode=vr`);
+            }}
+          >
+            Enter VR Mode
+          </button>
+        </div>
       </section>
 
       <section className="panel title-panel">

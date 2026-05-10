@@ -13,6 +13,7 @@ import RemoteBulletTracers from './effects/RemoteBulletTracers';
 import RemoteMuzzleFlashes from './effects/RemoteMuzzleFlashes';
 import WeaponModel from './WeaponModel';
 import PauseMenu from './ui/PauseMenu';
+import VRSessionBridge from './VRSessionBridge';
 import GameMap from './maps/GameMap';
 import type { ClientMessage, RoomSnapshot } from './types';
 
@@ -23,9 +24,10 @@ type Props = {
   scoreboardOpen: boolean;
   onScoreboard: (open: boolean) => void;
   onLeave: () => void;
+  vrMode: boolean;
 };
 
-export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, onScoreboard, onLeave }: Props) {
+export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, onScoreboard, onLeave, vrMode }: Props) {
   const me = snapshot.players.find((player) => player.id === playerId);
   const screenRef = useRef<HTMLElement>(null);
   const hasLockedOnce = useRef(false);
@@ -64,6 +66,7 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
   }, []);
 
   useEffect(() => {
+    if (vrMode) return undefined;
     const onPointerLockChange = () => {
       const canvas = screenRef.current?.querySelector('canvas');
       const locked = Boolean(canvas && document.pointerLockElement === canvas);
@@ -90,16 +93,17 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
       window.removeEventListener('keydown', onKeyDown);
       if (document.pointerLockElement) void document.exitPointerLock();
     };
-  }, []);
+  }, [vrMode]);
 
   useEffect(() => {
+    if (vrMode) return undefined;
     const timeout = window.setTimeout(() => {
       requestPointerLock();
     }, 250);
     return () => window.clearTimeout(timeout);
-  }, [requestPointerLock]);
+  }, [requestPointerLock, vrMode]);
 
-  const controlsEnabled = pointerLocked && !pauseMenuOpen;
+  const controlsEnabled = !vrMode && pointerLocked && !pauseMenuOpen;
 
   if (!me || !me.weaponId) return null;
 
@@ -120,37 +124,48 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
         <RemoteMuzzleFlashes events={snapshot.shotEvents} players={snapshot.players} localPlayerId={playerId} serverTime={snapshot.serverTime} />
         <BulletTracer tracers={tracers} />
         <ImpactEffect impacts={impacts} />
-        <WeaponModel
-          weaponId={me.weaponId}
-          ads={weaponView.ads}
-          recoil={weaponView.recoil}
-          moving={weaponView.moving}
-          crouching={weaponView.crouching}
-          firing={weaponView.firing}
-          reloading={Boolean(me.reloadingUntil)}
-          shotPulse={weaponView.shotPulse}
-        />
-        <PlayerController
-          player={me}
-          snapshot={snapshot}
-          activeMapId={snapshot.activeMapId}
-          send={send}
-          onScoreboard={onScoreboard}
-          onWeaponViewChange={setWeaponView}
-          onShotVisual={addShotVisual}
-          controlsEnabled={controlsEnabled}
-        />
+        {vrMode ? <VRSessionBridge player={me} /> : null}
+        {!vrMode ? (
+          <>
+            <WeaponModel
+              weaponId={me.weaponId}
+              ads={weaponView.ads}
+              recoil={weaponView.recoil}
+              moving={weaponView.moving}
+              crouching={weaponView.crouching}
+              firing={weaponView.firing}
+              reloading={Boolean(me.reloadingUntil)}
+              shotPulse={weaponView.shotPulse}
+            />
+            <PlayerController
+              player={me}
+              snapshot={snapshot}
+              activeMapId={snapshot.activeMapId}
+              send={send}
+              onScoreboard={onScoreboard}
+              onWeaponViewChange={setWeaponView}
+              onShotVisual={addShotVisual}
+              controlsEnabled={controlsEnabled}
+            />
+          </>
+        ) : null}
         <GameAudio snapshot={snapshot} localPlayerId={playerId} />
       </Canvas>
-      <HUD snapshot={snapshot} player={me} scoreboardOpen={scoreboardOpen} ads={weaponView.ads} playerId={playerId} />
-      {!pointerLocked && !pauseMenuOpen ? (
+      <HUD snapshot={snapshot} player={me} scoreboardOpen={scoreboardOpen} ads={!vrMode && weaponView.ads} playerId={playerId} />
+      {vrMode ? (
+        <div className="vr-mode-hint">
+          <strong>VR Mode</strong>
+          <span>Questブラウザの Enter VR を押すとHMD視点で見回せます</span>
+        </div>
+      ) : null}
+      {!vrMode && !pointerLocked && !pauseMenuOpen ? (
         <button className="pointer-start-overlay" onClick={requestPointerLock}>
           <strong>クリックして操作開始</strong>
           <span>ESCでメニューを開けます</span>
         </button>
       ) : null}
-      {pauseMenuOpen ? <PauseMenu onResume={requestPointerLock} onLeave={onLeave} /> : null}
-      <div className="lock-hint">ESC / P: Menu</div>
+      {!vrMode && pauseMenuOpen ? <PauseMenu onResume={requestPointerLock} onLeave={onLeave} /> : null}
+      {!vrMode ? <div className="lock-hint">ESC / P: Menu</div> : null}
     </main>
   );
 }
