@@ -1229,6 +1229,27 @@ td {
   text-transform: uppercase;
 }
 
+.vr-debug-panel {
+  position: absolute;
+  right: 18px;
+  top: 82px;
+  z-index: 25;
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(81, 199, 255, 0.35);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(5, 8, 12, 0.78);
+  color: #d7f1ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.vr-debug-panel strong {
+  color: #51c7ff;
+}
+
 .quickfire-vr-button {
   z-index: 50 !important;
 }

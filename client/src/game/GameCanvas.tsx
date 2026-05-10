@@ -13,7 +13,7 @@ import RemoteBulletTracers from './effects/RemoteBulletTracers';
 import RemoteMuzzleFlashes from './effects/RemoteMuzzleFlashes';
 import WeaponModel from './WeaponModel';
 import PauseMenu from './ui/PauseMenu';
-import VRSessionBridge from './VRSessionBridge';
+import VRSessionBridge, { type VRDebugState } from './VRSessionBridge';
 import GameMap from './maps/GameMap';
 import type { ClientMessage, RoomSnapshot } from './types';
 
@@ -33,6 +33,7 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
   const hasLockedOnce = useRef(false);
   const [pointerLocked, setPointerLocked] = useState(false);
   const [pauseMenuOpen, setPauseMenuOpen] = useState(false);
+  const [vrDebug, setVrDebug] = useState<VRDebugState | null>(null);
   const [tracers, setTracers] = useState<BulletTracerItem[]>([]);
   const [impacts, setImpacts] = useState<ImpactEffectItem[]>([]);
   const [weaponView, setWeaponView] = useState({
@@ -124,7 +125,16 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
         <RemoteMuzzleFlashes events={snapshot.shotEvents} players={snapshot.players} localPlayerId={playerId} serverTime={snapshot.serverTime} />
         <BulletTracer tracers={tracers} />
         <ImpactEffect impacts={impacts} />
-        {vrMode ? <VRSessionBridge player={me} /> : null}
+        {vrMode ? (
+          <VRSessionBridge
+            player={me}
+            snapshot={snapshot}
+            activeMapId={snapshot.activeMapId}
+            send={send}
+            onShotVisual={addShotVisual}
+            onDebugInput={setVrDebug}
+          />
+        ) : null}
         {!vrMode ? (
           <>
             <WeaponModel
@@ -158,6 +168,7 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
           <span>Questブラウザの Enter VR を押すとHMD視点で見回せます</span>
         </div>
       ) : null}
+      {vrMode && new URLSearchParams(window.location.search).get('debugVr') === '1' && vrDebug ? <VRDebugPanel debug={vrDebug} /> : null}
       {!vrMode && !pointerLocked && !pauseMenuOpen ? (
         <button className="pointer-start-overlay" onClick={requestPointerLock}>
           <strong>クリックして操作開始</strong>
@@ -167,5 +178,19 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
       {!vrMode && pauseMenuOpen ? <PauseMenu onResume={requestPointerLock} onLeave={onLeave} /> : null}
       {!vrMode ? <div className="lock-hint">ESC / P: Menu</div> : null}
     </main>
+  );
+}
+
+function VRDebugPanel({ debug }: { debug: VRDebugState }) {
+  return (
+    <div className="vr-debug-panel">
+      <strong>VR INPUT</strong>
+      <span>L stick {debug.leftStickX.toFixed(2)} / {debug.leftStickY.toFixed(2)}</span>
+      <span>R stick {debug.rightStickX.toFixed(2)} / {debug.rightStickY.toFixed(2)}</span>
+      <span>L trigger {debug.leftTrigger.toFixed(2)} / grip {String(debug.leftGrip)}</span>
+      <span>R trigger {debug.rightTrigger.toFixed(2)} / grip {String(debug.rightGrip)}</span>
+      <span>A {String(debug.aPressed)} / B {String(debug.bPressed)}</span>
+      <span>isVRMode {String(debug.isVRMode)}</span>
+    </div>
   );
 }
