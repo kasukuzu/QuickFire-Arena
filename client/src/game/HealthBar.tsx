@@ -14,7 +14,7 @@ export default function HealthBar({ hp, y = 2.2 }: Props) {
 
   useFrame(({ camera }) => {
     if (!groupRef.current) return;
-    groupRef.current.quaternion.copy(camera.quaternion);
+    camera.getWorldQuaternion(groupRef.current.quaternion);
     const distance = groupRef.current.getWorldPosition(new THREE.Vector3()).distanceTo(camera.position);
     const scale = THREE.MathUtils.clamp(distance / 14, 0.85, 1.35);
     groupRef.current.scale.setScalar(scale);

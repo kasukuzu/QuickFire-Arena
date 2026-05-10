@@ -18,7 +18,7 @@ export default function DamageNumber({ event, target, serverTime }: Props) {
     const group = groupRef.current;
     if (!group) return;
     const age = Math.max(0, serverTime - event.createdAt) / 1000;
-    group.quaternion.copy(camera.quaternion);
+    camera.getWorldQuaternion(group.quaternion);
     group.position.set(
       target.position.x + offset.x,
       target.position.y + (target.crouching ? 1.95 : 2.45) + age * 0.55 + offset.y,
