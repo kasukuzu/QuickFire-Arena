@@ -13,6 +13,7 @@ type Props = {
   snapshot: RoomSnapshot;
   activeMapId: MapId;
   send: (message: ClientMessage) => void;
+  onAdsChange?: (ads: boolean) => void;
   onShotVisual: (
     tracer: { from: Vec3; to: Vec3 },
     impact: { position: Vec3; kind: 'world' | 'hit' }
@@ -40,10 +41,13 @@ const STAND_PLAYER_HEIGHT = 1.8;
 const CROUCH_PLAYER_HEIGHT = 1.22;
 const VR_MOVE_SPEED = 5.0;
 const CROUCH_SPEED_MULTIPLIER = 0.65;
+const STAND_EYE_HEIGHT = 1.6;
+const CROUCH_EYE_HEIGHT = 1.05;
+const EYE_LERP_SPEED = 10;
 const SNAP_TURN_RAD = THREE.MathUtils.degToRad(30);
 const SNAP_TURN_THRESHOLD = 0.7;
 
-export default function VRSessionBridge({ player, snapshot, activeMapId, send, onShotVisual, onDebugInput }: Props) {
+export default function VRSessionBridge({ player, snapshot, activeMapId, send, onAdsChange, onShotVisual, onDebugInput }: Props) {
   const { camera, gl } = useThree();
   const rigRef = useRef<THREE.Group>(null);
   const leftController = useMemo(() => gl.xr.getController(0), [gl]);
@@ -52,6 +56,7 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
   const rightGrip = useMemo(() => gl.xr.getControllerGrip(1), [gl]);
   const position = useRef(new THREE.Vector3(player.position.x, player.position.y, player.position.z));
   const velocityY = useRef(0);
+  const eyeHeight = useRef(STAND_EYE_HEIGHT);
   const yawOffset = useRef(player.rotationY);
   const lastInputAt = useRef(0);
   const snapReady = useRef(true);
@@ -83,8 +88,10 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
     document.body.appendChild(button);
     const rig = rigRef.current;
     if (rig) rig.add(camera);
+    camera.position.set(0, STAND_EYE_HEIGHT, 0);
 
     return () => {
+      onAdsChange?.(false);
       button.remove();
       if (camera.parent === rig) camera.removeFromParent();
       gl.xr.enabled = false;
@@ -111,9 +118,13 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
     const crouching = canMove && input.leftGrip;
     const height = crouching ? CROUCH_PLAYER_HEIGHT : STAND_PLAYER_HEIGHT;
     const speed = VR_MOVE_SPEED * (crouching ? CROUCH_SPEED_MULTIPLIER : 1);
+    const targetEyeHeight = crouching ? CROUCH_EYE_HEIGHT : STAND_EYE_HEIGHT;
+    eyeHeight.current = THREE.MathUtils.lerp(eyeHeight.current, targetEyeHeight, Math.min(1, delta * EYE_LERP_SPEED));
 
     if (canMove) {
       applySnapTurn(input.rightStickX);
+      rig.rotation.y = yawOffset.current;
+      rig.updateWorldMatrix(true, true);
       movePlayer(input.leftStickX, input.leftStickY, speed, height, delta);
       handleJump(input.aPressed);
       handleReload(input.bPressed);
@@ -124,7 +135,8 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
       weaponSystem.stopFire();
     }
 
-    rig.position.set(position.current.x, position.current.y, position.current.z);
+    onAdsChange?.(weaponSystem.ads);
+    rig.position.set(position.current.x, position.current.y + eyeHeight.current - camera.position.y, position.current.z);
     rig.rotation.y = yawOffset.current;
 
     const now = performance.now();
@@ -208,7 +220,7 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
 
   function fire() {
     if (!canShoot()) return;
-    const muzzlePose = getMuzzleWorldPose(muzzleRef);
+    const muzzlePose = weaponSystem.ads ? getCameraAimPose(camera) : getMuzzleWorldPose(muzzleRef);
     if (!muzzlePose) return;
     const { origin, direction } = muzzlePose;
     const visualHit = getVisualHit(origin, direction, snapshot.players, player.id, weapon.range, activeMapId);
@@ -350,7 +362,7 @@ function readQuestInput(gl: THREE.WebGLRenderer): VRDebugState {
     rightStickY: rightAxes.y,
     leftTrigger: getButtonValue(left, 0),
     rightTrigger: getButtonValue(right, 0),
-    leftGrip: getButtonPressed(left, 1),
+    leftGrip: getButtonPressed(left, 1) || getButtonPressed(left, 2) || getButtonPressed(left, 3),
     rightGrip: getButtonPressed(right, 1),
     aPressed: getButtonPressed(right, 4),
     bPressed: getButtonPressed(right, 5),
@@ -392,6 +404,15 @@ function getMuzzleWorldPose(muzzleRef: RefObject<THREE.Group | null>) {
   muzzle.getWorldQuaternion(quaternion);
   direction.applyQuaternion(quaternion).normalize();
   return { origin, direction };
+}
+
+function getCameraAimPose(camera: THREE.Camera) {
+  const origin = new THREE.Vector3();
+  const direction = new THREE.Vector3();
+  camera.getWorldPosition(origin);
+  camera.getWorldDirection(direction);
+  origin.addScaledVector(direction, 0.18);
+  return { origin, direction: direction.normalize() };
 }
 
 function getVisualHit(

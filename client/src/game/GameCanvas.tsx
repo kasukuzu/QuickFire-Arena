@@ -14,6 +14,7 @@ import RemoteMuzzleFlashes from './effects/RemoteMuzzleFlashes';
 import WeaponModel from './WeaponModel';
 import PauseMenu from './ui/PauseMenu';
 import VRSessionBridge, { type VRDebugState } from './VRSessionBridge';
+import VRADSOverlay from './VRADSOverlay';
 import VRHud from './VRHud';
 import GameMap from './maps/GameMap';
 import type { ClientMessage, RoomSnapshot } from './types';
@@ -35,6 +36,7 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
   const [pointerLocked, setPointerLocked] = useState(false);
   const [pauseMenuOpen, setPauseMenuOpen] = useState(false);
   const [vrDebug, setVrDebug] = useState<VRDebugState | null>(null);
+  const [vrAds, setVrAds] = useState(false);
   const [tracers, setTracers] = useState<BulletTracerItem[]>([]);
   const [impacts, setImpacts] = useState<ImpactEffectItem[]>([]);
   const [weaponView, setWeaponView] = useState({
@@ -132,11 +134,13 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
             snapshot={snapshot}
             activeMapId={snapshot.activeMapId}
             send={send}
+            onAdsChange={setVrAds}
             onShotVisual={addShotVisual}
             onDebugInput={setVrDebug}
           />
         ) : null}
         {vrMode ? <VRHud snapshot={snapshot} player={me} /> : null}
+        {vrMode ? <VRADSOverlay weaponId={me.weaponId} ads={vrAds} /> : null}
         {!vrMode ? (
           <>
             <WeaponModel
@@ -163,7 +167,7 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
         ) : null}
         <GameAudio snapshot={snapshot} localPlayerId={playerId} />
       </Canvas>
-      <HUD snapshot={snapshot} player={me} scoreboardOpen={scoreboardOpen} ads={!vrMode && weaponView.ads} playerId={playerId} />
+      <HUD snapshot={snapshot} player={me} scoreboardOpen={scoreboardOpen} ads={vrMode ? vrAds : weaponView.ads} playerId={playerId} />
       {vrMode ? (
         <div className="vr-mode-hint">
           <strong>VR Mode</strong>
