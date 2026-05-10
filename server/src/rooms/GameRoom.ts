@@ -154,6 +154,12 @@ export class GameRoom {
       return;
     }
 
+    if (message.type === 'returnToLobby') {
+      if (this.state !== 'result' || playerId !== this.hostId) return;
+      this.returnToLobby();
+      return;
+    }
+
     if (this.state !== 'playing') return;
 
     if (message.type === 'input' && player.alive) {
@@ -483,6 +489,57 @@ export class GameRoom {
     this.matchEndsAt = null;
     this.healthPickups.clear();
     this.winnerId = [...this.players.values()].sort(comparePlayersByResult)[0]?.id ?? null;
+    this.broadcast();
+  }
+
+  private returnToLobby() {
+    this.state = 'lobby';
+    this.selectedMapId = 'warehouse';
+    this.activeMapId = 'warehouse';
+    this.rouletteCandidates = [];
+    this.rouletteResult = null;
+    this.rouletteStartedAt = null;
+    this.rouletteEndsAt = null;
+    this.mapSelectedAt = null;
+    this.countdownStartedAt = null;
+    this.matchStartedAt = null;
+    this.matchEndsAt = null;
+    this.winnerId = null;
+    this.healthPickups.clear();
+    this.damageEvents = [];
+    this.shotEvents = [];
+    this.killFeedEvents = [];
+
+    const spawns = getSpawns(this.activeMapId);
+    let index = 0;
+    for (const player of this.players.values()) {
+      const weapon = player.weaponId ? WEAPONS[player.weaponId] : null;
+      const spawn = spawns[index % spawns.length];
+      Object.assign(player, {
+        mapVote: null,
+        isReady: false,
+        position: toVec3(spawn),
+        rotationY: spawn.rotationY,
+        pitch: 0,
+        hp: 100,
+        ammo: weapon?.magazineSize ?? 0,
+        kills: 0,
+        deaths: 0,
+        totalDamage: 0,
+        killStreak: 0,
+        alive: true,
+        crouching: false,
+        invincibleUntil: null,
+        respawnAt: null,
+        reloadingUntil: null
+      });
+      index += 1;
+    }
+
+    for (const client of this.clients.values()) {
+      client.lastShotAt = 0;
+    }
+
     this.broadcast();
   }
 

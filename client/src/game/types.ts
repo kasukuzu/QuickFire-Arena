@@ -113,7 +113,8 @@ export type ClientMessage =
   | { type: 'startGame' }
   | { type: 'input'; position: Vec3; rotationY: number; pitch: number; crouching?: boolean }
   | { type: 'shoot'; origin: Vec3; direction: Vec3; hitPlayerId?: string | null; hitPart?: HitPart | null; impactPoint?: Vec3 }
-  | { type: 'reload' };
+  | { type: 'reload' }
+  | { type: 'returnToLobby' };
 
 export type ServerMessage =
   | { type: 'joined'; playerId: string; roomId: string }

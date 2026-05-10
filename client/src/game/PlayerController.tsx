@@ -19,6 +19,7 @@ type Props = {
     tracer: { from: Vec3; to: Vec3 },
     impact: { position: Vec3; kind: 'world' | 'hit' }
   ) => void;
+  controlsEnabled: boolean;
 };
 
 const keys = new Set<string>();
@@ -32,7 +33,16 @@ const CROUCH_LERP_SPEED = 10;
 const CROUCH_SPEED_MULTIPLIER = 0.65;
 const BASE_FOV = 75;
 
-export default function PlayerController({ player, snapshot, activeMapId, send, onScoreboard, onWeaponViewChange, onShotVisual }: Props) {
+export default function PlayerController({
+  player,
+  snapshot,
+  activeMapId,
+  send,
+  onScoreboard,
+  onWeaponViewChange,
+  onShotVisual,
+  controlsEnabled
+}: Props) {
   const { camera, gl } = useThree();
   const fpsCamera = camera as THREE.PerspectiveCamera;
   const yaw = useRef(player.rotationY);
@@ -51,6 +61,7 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
   const weaponSystemRef = useRef(weaponSystem);
   const fireRef = useRef<() => void>(() => undefined);
   const canShootRef = useRef<() => boolean>(() => false);
+  const controlsEnabledRef = useRef(controlsEnabled);
   const adsMouseDown = useRef(false);
   const adsKeyDown = useRef(false);
 
@@ -64,22 +75,17 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
   weaponSystemRef.current = weaponSystem;
   fireRef.current = fire;
   canShootRef.current = canShoot;
-
-  useEffect(() => {
-    const canvas = gl.domElement;
-    const lock = () => canvas.requestPointerLock();
-    canvas.addEventListener('click', lock);
-    return () => canvas.removeEventListener('click', lock);
-  }, [gl.domElement]);
+  controlsEnabledRef.current = controlsEnabled;
 
   useEffect(() => {
     const onMouseMove = (event: MouseEvent) => {
-      if (document.pointerLockElement !== gl.domElement || !playerRef.current.alive) return;
+      if (!controlsEnabledRef.current || document.pointerLockElement !== gl.domElement || !playerRef.current.alive) return;
       yaw.current -= event.movementX * 0.0022;
       pitch.current -= event.movementY * 0.0022;
       pitch.current = Math.max(-1.45, Math.min(1.45, pitch.current));
     };
     const onKeyDown = (event: KeyboardEvent) => {
+      if (!controlsEnabledRef.current) return;
       keys.add(event.code);
       if (event.code === 'Tab') {
         event.preventDefault();
@@ -92,6 +98,7 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
       if (event.code === 'KeyR') sendRef.current({ type: 'reload' });
     };
     const onKeyUp = (event: KeyboardEvent) => {
+      if (!controlsEnabledRef.current) return;
       keys.delete(event.code);
       if (event.code === 'Tab') onScoreboard(false);
       if (event.code === 'KeyK') {
@@ -100,6 +107,7 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
       }
     };
     const onMouseDown = (event: MouseEvent) => {
+      if (!controlsEnabledRef.current) return;
       if (event.button === 2) {
         adsMouseDown.current = true;
         updateAdsInput();
@@ -111,6 +119,7 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
       }
     };
     const onMouseUp = (event: MouseEvent) => {
+      if (!controlsEnabledRef.current) return;
       if (event.button === 2) {
         adsMouseDown.current = false;
         updateAdsInput();
@@ -134,6 +143,17 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
       window.removeEventListener('contextmenu', onContextMenu);
     };
   }, [gl.domElement, onScoreboard]);
+
+  useEffect(() => {
+    if (controlsEnabled) return;
+    keys.clear();
+    adsMouseDown.current = false;
+    adsKeyDown.current = false;
+    movingRef.current = false;
+    weaponSystemRef.current.stopAds();
+    weaponSystemRef.current.stopFire();
+    onScoreboard(false);
+  }, [controlsEnabled, onScoreboard]);
 
   function updateAdsInput() {
     if ((adsMouseDown.current || adsKeyDown.current) && canAds()) {
@@ -183,8 +203,10 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
     fpsCamera.fov = THREE.MathUtils.lerp(fpsCamera.fov, targetFov, 0.18);
     fpsCamera.updateProjectionMatrix();
 
-    if (!player.alive || snapshot.state !== 'playing') {
+    if (!player.alive || snapshot.state !== 'playing' || !controlsEnabled) {
       weaponSystem.stopAds();
+      weaponSystem.stopFire();
+      movingRef.current = false;
       camera.position.set(player.position.x, player.position.y + cameraHeight.current, player.position.z);
       return;
     }
@@ -257,6 +279,7 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
   function canShoot() {
     return (
       snapshot.state === 'playing' &&
+      controlsEnabled &&
       player.alive &&
       Boolean(player.weaponId) &&
       player.ammo > 0 &&
@@ -270,6 +293,7 @@ export default function PlayerController({ player, snapshot, activeMapId, send, 
     const currentSnapshot = snapshotRef.current;
     return (
       currentSnapshot.state === 'playing' &&
+      controlsEnabledRef.current &&
       currentPlayer.alive &&
       !currentPlayer.reloadingUntil &&
       !(currentPlayer.invincibleUntil && currentPlayer.invincibleUntil > currentSnapshot.serverTime)

@@ -4,12 +4,16 @@ import type { PlayerState, RoomSnapshot } from './types';
 
 type Props = {
   snapshot: RoomSnapshot;
+  playerId: string;
+  onReturnToLobby: () => void;
   onLeave: () => void;
 };
 
-export default function ResultScreen({ snapshot, onLeave }: Props) {
+export default function ResultScreen({ snapshot, playerId, onReturnToLobby, onLeave }: Props) {
   const ranking = [...snapshot.players].sort(comparePlayersByResult);
   const winner = ranking.find((player) => player.id === snapshot.winnerId) ?? ranking[0];
+  const me = snapshot.players.find((player) => player.id === playerId);
+  const canReturnToLobby = Boolean(me?.isHost);
 
   return (
     <main className="screen panel-screen">
@@ -43,7 +47,17 @@ export default function ResultScreen({ snapshot, onLeave }: Props) {
             ))}
           </tbody>
         </table>
-        <button className="primary" onClick={onLeave}>Back to Title</button>
+        <div className="result-actions">
+          <button className="primary" disabled={!canReturnToLobby} onClick={onReturnToLobby}>
+            ロビーに戻る
+          </button>
+          <button onClick={onLeave}>タイトルへ戻る</button>
+        </div>
+        {canReturnToLobby ? (
+          <p className="muted">同じルームと参加者のまま、次のマッチ準備に戻れます。</p>
+        ) : (
+          <p className="muted">ホストがロビーに戻すのを待っています。</p>
+        )}
       </section>
     </main>
   );

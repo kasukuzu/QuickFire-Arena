@@ -17,11 +17,13 @@ export default function App() {
   const [snapshot, setSnapshot] = useState<RoomSnapshot | null>(null);
   const [error, setError] = useState('');
   const [scoreboardOpen, setScoreboardOpen] = useState(false);
+  const intentionalCloseRef = useRef(false);
 
   const connected = useMemo(() => Boolean(playerId && snapshot), [playerId, snapshot]);
 
   function connect(initialMessage: ClientMessage) {
     setError('');
+    intentionalCloseRef.current = false;
     socketRef.current?.close();
     const socket = new WebSocket(WS_URL);
     socketRef.current = socket;
@@ -37,7 +39,7 @@ export default function App() {
       if (message.type === 'error') setError(message.message);
     });
     socket.addEventListener('close', () => {
-      if (!snapshot || snapshot.state !== 'result') setError('Connection closed.');
+      if (!intentionalCloseRef.current) setError('Connection closed.');
     });
   }
 
@@ -47,11 +49,13 @@ export default function App() {
   }
 
   function leave() {
+    intentionalCloseRef.current = true;
     socketRef.current?.close();
     socketRef.current = null;
     setPlayerId('');
     setSnapshot(null);
     setScoreboardOpen(false);
+    setError('');
   }
 
   if (connected && snapshot?.state === 'lobby') {
@@ -89,12 +93,13 @@ export default function App() {
         send={send}
         scoreboardOpen={scoreboardOpen}
         onScoreboard={setScoreboardOpen}
+        onLeave={leave}
       />
     );
   }
 
   if (connected && snapshot?.state === 'result') {
-    return <ResultScreen snapshot={snapshot} onLeave={leave} />;
+    return <ResultScreen snapshot={snapshot} playerId={playerId} onReturnToLobby={() => send({ type: 'returnToLobby' })} onLeave={leave} />;
   }
 
   return (
