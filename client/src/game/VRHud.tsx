@@ -17,9 +17,9 @@ export default function VRHud({ snapshot, player }: Props) {
   const seconds = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
   const weapon = player.weaponId ? WEAPONS[player.weaponId] : null;
   const hpRatio = Math.max(0, Math.min(1, player.hp / 100));
-  const hpColor = player.hp <= 20 ? '#ff4a3f' : player.hp <= 50 ? '#ffd34d' : '#42e184';
+  const hpColor = player.hp <= 20 ? '#ff4d4d' : player.hp <= 50 ? '#ffe066' : '#b9ff6a';
   const ammoRatio = weapon ? Math.max(0, Math.min(1, player.ammo / weapon.magazineSize)) : 0;
-  const ammoColor = weapon && player.ammo === 0 ? '#ff4a3f' : '#ead46d';
+  const ammoColor = weapon && player.ammo === 0 ? '#ff4d4d' : '#ffe36e';
   const reloadProgress = getReloadProgress(player, weapon, snapshot.serverTime);
 
   useFrame(({ camera }) => {
@@ -31,10 +31,10 @@ export default function VRHud({ snapshot, player }: Props) {
 
   return (
     <group ref={rootRef}>
-      <HpPanel position={[-0.72, -0.38, -1.82]} hp={player.hp} hpRatio={hpRatio} hpColor={hpColor} />
-      <TimerPanel position={[0, 0.42, -1.82]} label={`${minutes}:${seconds}`} />
+      <HpPanel position={[-1.05, -0.55, -1.85]} hp={player.hp} hpRatio={hpRatio} hpColor={hpColor} />
+      <TimerPanel position={[0, 0.5, -1.85]} label={`${minutes}:${seconds}`} />
       <AmmoPanel
-        position={[0.72, -0.38, -1.82]}
+        position={[1.05, -0.55, -1.85]}
         weaponName={weapon?.name ?? '-'}
         ammo={`${player.ammo}/${weapon?.magazineSize ?? '-'}`}
         ammoRatio={ammoRatio}
@@ -59,12 +59,12 @@ function HpPanel({
   return (
     <group position={position}>
       <CutPanel size={[0.52, 0.22]} cut={0.046} />
-      <Text position={[-0.18, 0.038, 0.018]} fontSize={0.03} color="#111111" anchorX="left" anchorY="middle">
+      <GlowText position={[-0.18, 0.038, 0.018]} fontSize={0.03} color="#d8f3ff" anchorX="left">
         HP
-      </Text>
-      <Text position={[0.17, 0.02, 0.018]} fontSize={0.084} color="#050505" anchorX="center" anchorY="middle">
+      </GlowText>
+      <GlowText position={[0.17, 0.02, 0.018]} fontSize={0.084} color="#f4fbff" anchorX="center" outlineWidth={0.006}>
         {hp}
-      </Text>
+      </GlowText>
       <HudBar position={[0, -0.072, 0.018]} width={0.39} height={0.034} ratio={hpRatio} color={hpColor} />
     </group>
   );
@@ -74,9 +74,9 @@ function TimerPanel({ position, label }: { position: [number, number, number]; l
   return (
     <group position={position}>
       <CutPanel size={[0.56, 0.17]} cut={0.052} variant="timer" />
-      <Text position={[0, 0.01, 0.018]} fontSize={0.092} color="#050505" anchorX="center" anchorY="middle">
+      <GlowText position={[0, 0.01, 0.018]} fontSize={0.092} color="#f7fbff" anchorX="center" outlineWidth={0.006}>
         {label}
-      </Text>
+      </GlowText>
     </group>
   );
 }
@@ -100,13 +100,13 @@ function AmmoPanel({
   return (
     <group position={position}>
       <CutPanel size={[0.56, 0.22]} cut={0.046} mirror />
-      <Text position={[-0.19, 0.05, 0.018]} fontSize={0.03} color="#111111" anchorX="left" anchorY="middle">
+      <GlowText position={[-0.19, 0.05, 0.018]} fontSize={0.03} color="#d8f3ff" anchorX="left">
         {reloading ? 'Reloading...' : weaponName}
-      </Text>
-      <Text position={[0.15, 0.016, 0.018]} fontSize={0.076} color="#050505" anchorX="center" anchorY="middle">
+      </GlowText>
+      <GlowText position={[0.15, 0.016, 0.018]} fontSize={0.076} color="#f4fbff" anchorX="center" outlineWidth={0.006}>
         {ammo}
-      </Text>
-      <HudBar position={[0, -0.072, 0.018]} width={0.42} height={0.034} ratio={reloading ? reloadProgress : ammoRatio} color={reloading ? '#ffb45d' : ammoColor} mirror />
+      </GlowText>
+      <HudBar position={[0, -0.072, 0.018]} width={0.42} height={0.034} ratio={reloading ? reloadProgress : ammoRatio} color={reloading ? '#ffb347' : ammoColor} mirror />
     </group>
   );
 }
@@ -128,11 +128,11 @@ function CutPanel({
     <>
       <mesh position={[0, 0, -0.004]} renderOrder={50}>
         <shapeGeometry args={[backing]} />
-        <meshBasicMaterial color="#53666a" transparent opacity={0.34} depthTest={false} depthWrite={false} />
+        <meshBasicMaterial color="#415b63" transparent opacity={0.58} depthTest={false} depthWrite={false} />
       </mesh>
       <mesh position={[0, 0, 0]} renderOrder={51}>
         <shapeGeometry args={[shape]} />
-        <meshBasicMaterial color="#a9c1c6" transparent opacity={0.3} depthTest={false} depthWrite={false} />
+        <meshBasicMaterial color="#9fc1c9" transparent opacity={0.5} depthTest={false} depthWrite={false} />
       </mesh>
     </>
   );
@@ -161,13 +161,44 @@ function HudBar({
     <group position={position}>
       <mesh position={[0, 0, 0]} renderOrder={52}>
         <shapeGeometry args={[backgroundShape]} />
-        <meshBasicMaterial color="#2f3839" transparent opacity={0.85} depthTest={false} depthWrite={false} />
+        <meshBasicMaterial color="#14252b" transparent opacity={0.9} depthTest={false} depthWrite={false} />
       </mesh>
       <mesh position={[fillX, 0, 0.004]} renderOrder={53}>
         <shapeGeometry args={[fillShape]} />
-        <meshBasicMaterial color={color} transparent opacity={0.98} depthTest={false} depthWrite={false} />
+        <meshBasicMaterial color={color} transparent opacity={1} depthTest={false} depthWrite={false} />
       </mesh>
     </group>
+  );
+}
+
+function GlowText({
+  children,
+  position,
+  fontSize,
+  color,
+  anchorX,
+  outlineWidth = 0.003
+}: {
+  children: string | number;
+  position: [number, number, number];
+  fontSize: number;
+  color: string;
+  anchorX: 'left' | 'center' | 'right';
+  outlineWidth?: number;
+}) {
+  return (
+    <Text
+      position={position}
+      fontSize={fontSize}
+      color={color}
+      anchorX={anchorX}
+      anchorY="middle"
+      outlineWidth={outlineWidth}
+      outlineColor="#143845"
+      outlineOpacity={0.72}
+    >
+      {children}
+    </Text>
   );
 }
 
