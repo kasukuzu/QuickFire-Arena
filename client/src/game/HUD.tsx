@@ -3,7 +3,7 @@ import { WEAPONS } from './WeaponSystem';
 import ADSOverlay from './ads/ADSOverlay';
 import KillFeed from './ui/KillFeed';
 import KillStreakMessage from './ui/KillStreakMessage';
-import { getActiveMapName } from './maps/mapDefinitions';
+import MatchHud from './ui/hud/MatchHud';
 import { playHitSound, playHurtSound, playReloadDoneSound, playReloadSound } from './sound';
 import type { DamageEvent, PlayerState, RoomSnapshot } from './types';
 
@@ -13,12 +13,14 @@ type Props = {
   scoreboardOpen: boolean;
   ads: boolean;
   playerId: string;
+  vrMode?: boolean;
 };
 
-export default function HUD({ snapshot, player, scoreboardOpen, ads, playerId }: Props) {
+export default function HUD({ snapshot, player, scoreboardOpen, ads, playerId, vrMode = false }: Props) {
   const remaining = snapshot.matchEndsAt ? Math.max(0, snapshot.matchEndsAt - snapshot.serverTime) : 0;
   const minutes = Math.floor(remaining / 60000);
   const seconds = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
+  const timeLabel = `${minutes}:${seconds}`;
   const weapon = player.weaponId ? WEAPONS[player.weaponId] : null;
   const respawnMs = player.respawnAt ? Math.max(0, player.respawnAt - snapshot.serverTime) : 0;
   const invincibleMs = player.invincibleUntil ? Math.max(0, player.invincibleUntil - snapshot.serverTime) : 0;
@@ -27,6 +29,7 @@ export default function HUD({ snapshot, player, scoreboardOpen, ads, playerId }:
   const hpTone = hpPercent <= 20 ? 'danger' : hpPercent <= 50 ? 'warning' : 'healthy';
   const reloadProgress = getReloadProgress(player, weapon, snapshot.serverTime);
   const isReloading = reloadProgress !== null;
+  const ammoRatio = weapon ? Math.max(0, Math.min(1, player.ammo / weapon.magazineSize)) : 0;
   const recentHit = useMemo(
     () => latestRecent(snapshot.damageEvents, snapshot.serverTime, (event) => event.attackerId === playerId, 240),
     [playerId, snapshot.damageEvents, snapshot.serverTime]
@@ -44,43 +47,23 @@ export default function HUD({ snapshot, player, scoreboardOpen, ads, playerId }:
       <DamageOverlay events={recentDamageEvents} player={player} players={snapshot.players} serverTime={snapshot.serverTime} />
       <HitMarker event={recentHit} serverTime={snapshot.serverTime} />
 
-      <div className="hud-topbar">
-        <div className="hud-chip timer">{minutes}:{seconds}</div>
-        <div className="hud-chip map">{getActiveMapName(snapshot.activeMapId)}</div>
-        <div className="hud-chip score">{player.kills} K / {player.deaths} D</div>
-      </div>
-      {ads && player.weaponId ? <ADSOverlay weaponId={player.weaponId} ads={ads} /> : <div className="crosshair" />}
-
-      <div className="hud-bottom">
-        <section className={`hud-card hp-card ${hpTone}`}>
-          <div className="hud-card-header">
-            <span>HP</span>
-            <strong>{player.hp}</strong>
-          </div>
-          <div className="hp-track">
-            <div className="hp-fill" style={{ width: `${hpPercent}%` }} />
-          </div>
-        </section>
-
-        <section className={`hud-card ammo-card ${isReloading ? 'reloading' : ''} ${weapon && player.ammo === 0 ? 'empty' : ''}`}>
-          <div className="weapon-label">{weapon ? weapon.name : 'Weapon 未選択'}</div>
-          <div className="ammo-line">
-            <strong>{player.ammo}</strong>
-            <span>/</span>
-            <span>{weapon?.magazineSize ?? '-'}</span>
-          </div>
-          {isReloading ? (
-            <div className="reload-block">
-              <div className="reload-label">Reloading...</div>
-              <div className="reload-track">
-                <div className="reload-fill" style={{ width: `${reloadProgress * 100}%` }} />
-              </div>
-            </div>
-          ) : player.ammo === 0 && weapon ? (
-            <div className="reload-label empty">Press R to reload</div>
-          ) : null}
-        </section>
-      </div>
+      {!vrMode ? (
+        <>
+          <MatchHud
+            time={timeLabel}
+            hp={player.hp}
+            hpRatio={hpPercent / 100}
+            hpTone={hpTone}
+            weaponName={weapon ? weapon.name : 'Weapon'}
+            ammo={player.ammo}
+            magazineSize={weapon?.magazineSize ?? null}
+            ammoRatio={ammoRatio}
+            reloading={isReloading}
+            reloadProgress={reloadProgress}
+          />
+          {ads && player.weaponId ? <ADSOverlay weaponId={player.weaponId} ads={ads} /> : <div className="crosshair" />}
+        </>
+      ) : null}
 
       {!player.alive ? (
         <div className="respawn">Respawn in {Math.ceil(respawnMs / 1000)}s</div>

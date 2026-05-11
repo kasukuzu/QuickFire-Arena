@@ -167,7 +167,7 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
         ) : null}
         <GameAudio snapshot={snapshot} localPlayerId={playerId} />
       </Canvas>
-      <HUD snapshot={snapshot} player={me} scoreboardOpen={scoreboardOpen} ads={vrMode ? vrAds : weaponView.ads} playerId={playerId} />
+      <HUD snapshot={snapshot} player={me} scoreboardOpen={scoreboardOpen} ads={vrMode ? vrAds : weaponView.ads} playerId={playerId} vrMode={vrMode} />
       {vrMode ? (
         <div className="vr-mode-hint">
           <strong>VR Mode</strong>
