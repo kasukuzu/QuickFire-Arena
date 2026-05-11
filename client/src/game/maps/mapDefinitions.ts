@@ -111,6 +111,10 @@ function makeFactoryCollisions(): CollisionBox[] {
     box('factory-south-pipe-stack', [3, 1.25, 18], [7.5, 2.5, 1.4]),
     box('factory-decor-machine-north', [0.5, 1.35, -14.5], [4.0, 2.7, 3.0]),
     box('factory-decor-machine-west', [-17.8, 1.1, 9.2], [2.5, 2.2, 3.2]),
+    box('factory-decor-pipe-east', [17.2, 0.9, -6.2], [1.5, 1.8, 3.5]),
+    box('factory-decor-pipe-north-west', [-10.8, 0.8, -16.8], [3.0, 1.6, 1.1]),
+    box('factory-decor-control-north', [3.35, 0.8, -15.4], [1.3, 1.6, 0.8]),
+    box('factory-decor-control-west', [-16.5, 0.75, 6.35], [1.1, 1.5, 0.7]),
     box('factory-decor-barrels-east', [15.5, 0.9, -12.8], [2.0, 1.8, 1.2]),
     box('factory-decor-crates-south', [-4.9, 0.75, 12.35], [2.6, 1.5, 1.5]),
     box('factory-decor-crate-east', [16.6, 0.65, 9.5], [1.3, 1.3, 1.3])
@@ -162,6 +166,10 @@ function makeRooftopCollisions(): CollisionBox[] {
     box('roof-crane-truck', [-14.8, 0.9, 3.8], [5.6, 1.8, 3.0]),
     box('roof-decor-hvac-north-east', [14.8, 0.8, -13.2], [2.6, 1.6, 4.2]),
     box('roof-decor-hvac-south', [-2.8, 0.65, 14.4], [3.4, 1.3, 2.0]),
+    box('roof-decor-duct-east', [17.8, 0.75, -7.2], [1.2, 1.5, 4.1]),
+    box('roof-decor-duct-north-west', [-11.8, 0.65, -15.6], [3.7, 1.3, 1.1]),
+    box('roof-decor-maint-rack-north', [8.0, 0.9, -18.2], [2.4, 1.8, 0.9]),
+    box('roof-decor-maint-rack-west', [-17.8, 0.85, 11.0], [0.9, 1.7, 2.4]),
     box('roof-material-stack', [10.6, 0.65, -16.6], [3.9, 1.3, 1.6])
   ];
 }

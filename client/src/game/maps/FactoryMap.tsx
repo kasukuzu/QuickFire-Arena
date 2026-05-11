@@ -4,8 +4,10 @@ import MapSign from '../mapDecor/MapSign';
 import NeonSign from '../mapDecor/NeonSign';
 import WarningStripe from '../mapDecor/WarningStripe';
 import BarrelStack from '../props/BarrelStack';
+import ControlPanelUnit from '../props/ControlPanelUnit';
 import IndustrialMachine from '../props/IndustrialMachine';
 import PalletStack from '../props/PalletStack';
+import PipeMachine from '../props/PipeMachine';
 import SafetyBarrier from '../props/SafetyBarrier';
 import WarehouseCrate from '../props/WarehouseCrate';
 
@@ -87,8 +89,12 @@ export default function FactoryMap() {
 function FactoryProps() {
   return (
     <group>
-      <IndustrialMachine position={[0.5, 0, -14.5]} rotation={[0, 0.05, 0]} scale={1.15} color="#554a42" />
-      <IndustrialMachine position={[-17.8, 0, 9.2]} rotation={[0, Math.PI / 2, 0]} scale={0.9} color="#684733" />
+      <IndustrialMachine position={[0.5, 0, -14.5]} rotation={[0, 0.05, 0]} scale={1.15} baseColor="#554a42" label="PRESS 07" />
+      <IndustrialMachine position={[-17.8, 0, 9.2]} rotation={[0, Math.PI / 2, 0]} scale={0.9} baseColor="#684733" label="MILL B2" />
+      <PipeMachine position={[17.2, 0, -6.2]} rotation={[0, Math.PI / 2, 0]} scale={1.05} label="PIPE 04" />
+      <PipeMachine position={[-10.8, 0, -16.8]} rotation={[0, 0.05, 0]} scale={0.9} baseColor="#5b4030" label="VALVE A" />
+      <ControlPanelUnit position={[3.35, 0, -15.4]} rotation={[0, -0.45, 0]} scale={0.95} label="CTRL-7" />
+      <ControlPanelUnit position={[-16.5, 0, 6.35]} rotation={[0, 2.25, 0]} scale={0.85} baseColor="#443d36" label="PWR B" />
       <BarrelStack position={[15.5, 0, -12.8]} colors={['#7b4d31', '#8a3230', '#394247']} />
       <BarrelStack position={[-15.6, 0, -7.8]} colors={['#394247', '#7b4d31', '#8a3230']} />
       <WarehouseCrate position={[-5.5, 0.55, 12.2]} color="#6b4a34" />

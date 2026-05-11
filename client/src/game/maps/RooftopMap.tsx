@@ -4,6 +4,8 @@ import MapSign from '../mapDecor/MapSign';
 import NeonSign from '../mapDecor/NeonSign';
 import WarningStripe from '../mapDecor/WarningStripe';
 import CraneTruck from '../props/CraneTruck';
+import DuctUnit from '../props/DuctUnit';
+import MaintenanceRack from '../props/MaintenanceRack';
 import PalletStack from '../props/PalletStack';
 import RooftopHVAC from '../props/RooftopHVAC';
 import SafetyBarrier from '../props/SafetyBarrier';
@@ -77,9 +79,13 @@ export default function RooftopMap() {
 function RooftopProps() {
   return (
     <group>
-      <CraneTruck position={[-14.8, 0, 3.8]} rotation={[0, -0.45, 0]} scale={1.08} />
-      <RooftopHVAC position={[14.8, 0, -13.2]} rotation={[0, Math.PI / 2, 0]} scale={1.05} color="#879092" />
-      <RooftopHVAC position={[-2.8, 0, 14.4]} rotation={[0, 0.08, 0]} scale={0.86} color="#7b8587" />
+      <CraneTruck position={[-14.8, 0, 3.8]} rotation={[0, -0.45, 0]} scale={1.08} label="MAINT-03" />
+      <RooftopHVAC position={[14.8, 0, -13.2]} rotation={[0, Math.PI / 2, 0]} scale={1.05} baseColor="#879092" label="HVAC 12" />
+      <RooftopHVAC position={[-2.8, 0, 14.4]} rotation={[0, 0.08, 0]} scale={0.86} baseColor="#7b8587" label="AC-09" />
+      <DuctUnit position={[17.8, 0, -7.2]} rotation={[0, Math.PI / 2, 0]} scale={0.95} label="DUCT R" />
+      <DuctUnit position={[-11.8, 0, -15.6]} rotation={[0, 0.05, 0]} scale={0.82} baseColor="#727b7c" label="VENT 04" />
+      <MaintenanceRack position={[8.0, 0, -18.2]} rotation={[0, -0.2, 0]} scale={0.9} label="TOOLS" />
+      <MaintenanceRack position={[-17.8, 0, 11.0]} rotation={[0, Math.PI / 2, 0]} scale={0.82} baseColor="#657173" label="KIT R" />
       <WarehouseCrate position={[9.5, 0.55, -16.8]} color="#6d7677" />
       <WarehouseCrate position={[10.7, 0.55, -16.5]} color="#737f81" />
       <PalletStack position={[12.5, 0.22, -16.8]} rotation={[0, 0.25, 0]} />
