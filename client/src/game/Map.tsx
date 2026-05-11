@@ -3,6 +3,11 @@ import FloorMarking from './mapDecor/FloorMarking';
 import MapSign from './mapDecor/MapSign';
 import NeonSign from './mapDecor/NeonSign';
 import WarningStripe from './mapDecor/WarningStripe';
+import BarrelStack from './props/BarrelStack';
+import PalletStack from './props/PalletStack';
+import SafetyBarrier from './props/SafetyBarrier';
+import ShippingContainer from './props/ShippingContainer';
+import WarehouseCrate from './props/WarehouseCrate';
 
 type Vec3Tuple = [number, number, number];
 
@@ -58,6 +63,14 @@ const containers: BoxItem[] = [
   { id: 'short-container-south', position: [-1, 1.15, 8.4], size: [6.6, 2.3, 1.8], color: '#59605c' },
   { id: 'loading-bay-container', position: [-17.5, 1.2, -1], size: [2.2, 2.4, 5.8], color: '#4f5960' },
   { id: 'east-long-container', position: [18, 1.2, 8], size: [2.2, 2.4, 6.8], color: '#6a6339' }
+];
+
+const propCollisionBoxes: CollisionBox[] = [
+  { id: 'decor-container-blue', position: [-4.8, 1.25, -16.8], size: [5.8, 2.5, 2.25] },
+  { id: 'decor-container-red', position: [16.7, 1.25, -4.5], size: [2.25, 2.5, 5.8] },
+  { id: 'decor-container-gray', position: [4.8, 1.25, 16.8], size: [5.8, 2.5, 2.25] },
+  { id: 'decor-crate-stack-west', position: [-18.5, 1.0, 3.5], size: [2.6, 2.0, 2.4] },
+  { id: 'decor-barrier-center', position: [0, 0.55, -6.5], size: [4.4, 1.1, 0.5] }
 ];
 
 const crates: BoxItem[] = [
@@ -125,7 +138,8 @@ export const warehouseCollisionBoxes: CollisionBox[] = [
   ...shelves,
   ...drums,
   ...fences,
-  ...platforms.filter((item) => !item.id.includes('rail'))
+  ...platforms.filter((item) => !item.id.includes('rail')),
+  ...propCollisionBoxes
 ].map(({ id, position, size }) => ({ id, position, size }));
 
 export const warehouseWalkableSurfaces: CollisionBox[] = [
@@ -182,8 +196,28 @@ export default function Map() {
       <BoxGroup items={floorLines} />
       <BoxGroup items={warningStripes} />
       <WarehouseDecor />
+      <WarehouseProps />
       <Lights />
       <RespawnMarkers />
+    </group>
+  );
+}
+
+function WarehouseProps() {
+  return (
+    <group>
+      <ShippingContainer position={[-4.8, 1.25, -16.8]} color="#2f5f9f" label="QFA-184" />
+      <ShippingContainer position={[16.7, 1.25, -4.5]} rotation={[0, Math.PI / 2, 0]} color="#8b3d34" label="QF-R22" />
+      <ShippingContainer position={[4.8, 1.25, 16.8]} color="#60696c" label="ST-407" />
+      <WarehouseCrate position={[-18.7, 0.55, 3.1]} />
+      <WarehouseCrate position={[-17.5, 0.55, 3.7]} color="#755a38" />
+      <WarehouseCrate position={[-18.2, 1.6, 3.4]} scale={0.95} color="#8a6b43" />
+      <PalletStack position={[12.6, 0.22, -12.8]} rotation={[0, 0.35, 0]} />
+      <PalletStack position={[-12.2, 0.22, 12.5]} rotation={[0, -0.45, 0]} />
+      <BarrelStack position={[18.4, 0, 2.4]} />
+      <BarrelStack position={[-4.5, 0, 10.4]} colors={['#394247', '#8a3230', '#394247']} />
+      <SafetyBarrier position={[-1.2, 0, -6.5]} rotation={[0, 0.1, 0]} scale={1.1} />
+      <SafetyBarrier position={[1.2, 0, -6.5]} rotation={[0, -0.1, 0]} scale={1.1} />
     </group>
   );
 }

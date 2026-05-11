@@ -3,6 +3,11 @@ import FloorMarking from '../mapDecor/FloorMarking';
 import MapSign from '../mapDecor/MapSign';
 import NeonSign from '../mapDecor/NeonSign';
 import WarningStripe from '../mapDecor/WarningStripe';
+import CraneTruck from '../props/CraneTruck';
+import PalletStack from '../props/PalletStack';
+import RooftopHVAC from '../props/RooftopHVAC';
+import SafetyBarrier from '../props/SafetyBarrier';
+import WarehouseCrate from '../props/WarehouseCrate';
 
 function Box({ position, size, color }: { position: [number, number, number]; size: [number, number, number]; color: string }) {
   return (
@@ -59,11 +64,36 @@ export default function RooftopMap() {
       <Box position={[19, 1.05, -8]} size={[3.2, 2.1, 6]} color="#7c8788" />
       <Box position={[0, 0.75, -18]} size={[6, 1.5, 1.2]} color="#879092" />
       <Box position={[0, 0.75, 18]} size={[6, 1.5, 1.2]} color="#879092" />
+      <RooftopProps />
       <RooftopDecor />
 
       <ambientLight intensity={0.78} />
       <directionalLight position={[8, 14, 5]} intensity={1.65} color="#fff4d7" />
       <pointLight position={[0, 5, 0]} intensity={0.45} color="#dbefff" distance={24} />
+    </group>
+  );
+}
+
+function RooftopProps() {
+  return (
+    <group>
+      <CraneTruck position={[-14.8, 0, 3.8]} rotation={[0, -0.45, 0]} scale={1.08} />
+      <RooftopHVAC position={[14.8, 0, -13.2]} rotation={[0, Math.PI / 2, 0]} scale={1.05} color="#879092" />
+      <RooftopHVAC position={[-2.8, 0, 14.4]} rotation={[0, 0.08, 0]} scale={0.86} color="#7b8587" />
+      <WarehouseCrate position={[9.5, 0.55, -16.8]} color="#6d7677" />
+      <WarehouseCrate position={[10.7, 0.55, -16.5]} color="#737f81" />
+      <PalletStack position={[12.5, 0.22, -16.8]} rotation={[0, 0.25, 0]} />
+      <SafetyBarrier position={[-10.5, 0, 7.8]} rotation={[0, -0.4, 0]} />
+      <SafetyBarrier position={[-8.4, 0, 7.0]} rotation={[0, -0.4, 0]} />
+      <SafetyBarrier position={[18.4, 0, 13.4]} rotation={[0, Math.PI / 2, 0]} />
+      <mesh castShadow receiveShadow position={[-16.6, 2.9, 1.1]} rotation={[0, 0, -0.48]}>
+        <boxGeometry args={[4.8, 0.22, 0.22]} />
+        <meshStandardMaterial color="#d6a529" roughness={0.55} metalness={0.16} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[-18.6, 1.15, 0.2]}>
+        <boxGeometry args={[0.75, 0.75, 0.75]} />
+        <meshStandardMaterial color="#8a3d35" roughness={0.7} />
+      </mesh>
     </group>
   );
 }

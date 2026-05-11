@@ -3,6 +3,11 @@ import FloorMarking from '../mapDecor/FloorMarking';
 import MapSign from '../mapDecor/MapSign';
 import NeonSign from '../mapDecor/NeonSign';
 import WarningStripe from '../mapDecor/WarningStripe';
+import BarrelStack from '../props/BarrelStack';
+import IndustrialMachine from '../props/IndustrialMachine';
+import PalletStack from '../props/PalletStack';
+import SafetyBarrier from '../props/SafetyBarrier';
+import WarehouseCrate from '../props/WarehouseCrate';
 
 function Box({ position, size, color }: { position: [number, number, number]; size: [number, number, number]; color: string }) {
   return (
@@ -68,12 +73,42 @@ export default function FactoryMap() {
       <Box position={[0, 0.035, -11.35]} size={[12, 0.04, 0.2]} color="#1b1a18" />
       <Box position={[0, 0.03, 11.8]} size={[12, 0.04, 0.2]} color="#c7922f" />
       <Box position={[0, 0.035, 11.35]} size={[12, 0.04, 0.2]} color="#1b1a18" />
+      <FactoryProps />
       <FactoryDecor />
 
       <ambientLight intensity={0.5} />
       <pointLight position={[0, 6.5, 0]} intensity={1.25} color="#ffd7a0" distance={22} />
       <pointLight position={[-12, 5.8, -10]} intensity={0.7} color="#ff8a52" distance={12} />
       <pointLight position={[12, 5.8, 10]} intensity={0.7} color="#ff8a52" distance={12} />
+    </group>
+  );
+}
+
+function FactoryProps() {
+  return (
+    <group>
+      <IndustrialMachine position={[0.5, 0, -14.5]} rotation={[0, 0.05, 0]} scale={1.15} color="#554a42" />
+      <IndustrialMachine position={[-17.8, 0, 9.2]} rotation={[0, Math.PI / 2, 0]} scale={0.9} color="#684733" />
+      <BarrelStack position={[15.5, 0, -12.8]} colors={['#7b4d31', '#8a3230', '#394247']} />
+      <BarrelStack position={[-15.6, 0, -7.8]} colors={['#394247', '#7b4d31', '#8a3230']} />
+      <WarehouseCrate position={[-5.5, 0.55, 12.2]} color="#6b4a34" />
+      <WarehouseCrate position={[-4.3, 0.55, 12.5]} color="#584237" />
+      <WarehouseCrate position={[16.6, 0.55, 9.5]} color="#675043" />
+      <PalletStack position={[3.8, 0.22, -12.7]} rotation={[0, 0.2, 0]} />
+      <SafetyBarrier position={[-6.4, 0, -8.9]} rotation={[0, 0.15, 0]} />
+      <SafetyBarrier position={[6.4, 0, 8.9]} rotation={[0, Math.PI + 0.15, 0]} />
+      <mesh castShadow receiveShadow position={[11.8, 1.7, -12.2]} rotation={[0, 0, 0.32]}>
+        <boxGeometry args={[0.38, 3.4, 0.38]} />
+        <meshStandardMaterial color="#7a4a2c" roughness={0.7} metalness={0.35} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[13.2, 1.7, -12.2]} rotation={[0, 0, -0.26]}>
+        <boxGeometry args={[0.38, 3.4, 0.38]} />
+        <meshStandardMaterial color="#7a4a2c" roughness={0.7} metalness={0.35} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[12.5, 3.1, -12.2]}>
+        <boxGeometry args={[2.4, 0.28, 0.28]} />
+        <meshStandardMaterial color="#5f3f2d" roughness={0.7} metalness={0.35} />
+      </mesh>
     </group>
   );
 }
