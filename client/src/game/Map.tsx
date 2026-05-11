@@ -1,3 +1,9 @@
+import DirectionSign from './mapDecor/DirectionSign';
+import FloorMarking from './mapDecor/FloorMarking';
+import MapSign from './mapDecor/MapSign';
+import NeonSign from './mapDecor/NeonSign';
+import WarningStripe from './mapDecor/WarningStripe';
+
 type Vec3Tuple = [number, number, number];
 
 type BoxItem = {
@@ -175,8 +181,33 @@ export default function Map() {
       <Fences />
       <BoxGroup items={floorLines} />
       <BoxGroup items={warningStripes} />
+      <WarehouseDecor />
       <Lights />
       <RespawnMarkers />
+    </group>
+  );
+}
+
+function WarehouseDecor() {
+  return (
+    <group>
+      <NeonSign text="WAREHOUSE" position={[0, 3.15, -22.46]} rotation={[0, 0, 0]} width={4.3} color="#f5d15b" fontSize={0.36} />
+      <MapSign text="LOADING BAY" position={[-15.6, 2.75, -9.68]} rotation={[0, 0, 0]} width={2.8} color="#f5d15b" />
+      <MapSign text="STORAGE A" position={[-22.46, 2.35, -7]} rotation={[0, Math.PI / 2, 0]} width={2.5} color="#f4f2ea" />
+      <MapSign text="STORAGE B" position={[22.46, 2.35, 7]} rotation={[0, -Math.PI / 2, 0]} width={2.5} color="#f4f2ea" />
+      <NeonSign text="SUPPLY ROUTE" position={[13.6, 2.25, -22.46]} rotation={[0, 0, 0]} width={3.1} color="#7dd3fc" fontSize={0.22} />
+      <DirectionSign text="MAIN HALL" arrow="right" position={[-17.66, 2.05, -3.2]} rotation={[0, Math.PI / 2, 0]} color="#f5d15b" />
+      <DirectionSign text="EXIT" arrow="left" position={[17.66, 2.05, 4]} rotation={[0, -Math.PI / 2, 0]} color="#7dd3fc" />
+      <MapSign text="CAUTION" position={[0, 1.95, 22.46]} rotation={[0, Math.PI, 0]} width={2.4} color="#ffcf4d" background="#17110b" />
+      <MapSign text="KEEP OUT" position={[-6.8, 2.15, 14.46]} rotation={[0, Math.PI, 0]} width={2.4} color="#ff6b4a" background="#180c0b" />
+      <MapSign text="C-07" position={[-7.2, 2.55, -2.62]} rotation={[0, 0, 0]} width={1.2} height={0.42} color="#dce9ee" fontSize={0.18} />
+      <MapSign text="C-12" position={[7.4, 2.55, 2.42]} rotation={[0, Math.PI, 0]} width={1.2} height={0.42} color="#dce9ee" fontSize={0.18} />
+      <FloorMarking text="LOADING" position={[0, 0.035, -15.8]} width={5.8} depth={0.1} color="#f5d15b" opacity={0.66} />
+      <FloorMarking text="STORAGE" position={[0, 0.035, 15.8]} rotation={[-Math.PI / 2, 0, Math.PI]} width={5.8} depth={0.1} color="#dce9ee" opacity={0.56} />
+      <WarningStripe position={[-10.8, 0.055, -4.2]} width={3.6} />
+      <WarningStripe position={[10.8, 0.055, 4.2]} rotation={[-Math.PI / 2, 0, Math.PI]} width={3.6} />
+      <pointLight position={[0, 3.2, -21.8]} color="#f5d15b" intensity={0.35} distance={8} />
+      <pointLight position={[13.4, 2.7, -21.8]} color="#7dd3fc" intensity={0.25} distance={7} />
     </group>
   );
 }

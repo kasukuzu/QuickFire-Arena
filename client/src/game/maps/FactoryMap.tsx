@@ -1,3 +1,9 @@
+import DirectionSign from '../mapDecor/DirectionSign';
+import FloorMarking from '../mapDecor/FloorMarking';
+import MapSign from '../mapDecor/MapSign';
+import NeonSign from '../mapDecor/NeonSign';
+import WarningStripe from '../mapDecor/WarningStripe';
+
 function Box({ position, size, color }: { position: [number, number, number]; size: [number, number, number]; color: string }) {
   return (
     <mesh castShadow receiveShadow position={position}>
@@ -62,11 +68,35 @@ export default function FactoryMap() {
       <Box position={[0, 0.035, -11.35]} size={[12, 0.04, 0.2]} color="#1b1a18" />
       <Box position={[0, 0.03, 11.8]} size={[12, 0.04, 0.2]} color="#c7922f" />
       <Box position={[0, 0.035, 11.35]} size={[12, 0.04, 0.2]} color="#1b1a18" />
+      <FactoryDecor />
 
       <ambientLight intensity={0.5} />
       <pointLight position={[0, 6.5, 0]} intensity={1.25} color="#ffd7a0" distance={22} />
       <pointLight position={[-12, 5.8, -10]} intensity={0.7} color="#ff8a52" distance={12} />
       <pointLight position={[12, 5.8, 10]} intensity={0.7} color="#ff8a52" distance={12} />
+    </group>
+  );
+}
+
+function FactoryDecor() {
+  return (
+    <group>
+      <NeonSign text="FACTORY" position={[0, 3.1, -22.45]} rotation={[0, 0, 0]} width={3.6} color="#ff8a52" fontSize={0.34} />
+      <MapSign text="MACHINE AREA" position={[-2.4, 3.55, -2.34]} rotation={[0, 0, 0]} width={3.1} color="#ffcf4d" background="#17110d" />
+      <MapSign text="CONTROL ROOM" position={[22.45, 2.65, -8]} rotation={[0, -Math.PI / 2, 0]} width={3.1} color="#f4f2ea" />
+      <MapSign text="PIPELINE" position={[-22.45, 2.65, 8]} rotation={[0, Math.PI / 2, 0]} width={2.6} color="#ff8a52" background="#1b1110" />
+      <NeonSign text="HIGH VOLTAGE" position={[-12, 2.85, -6.72]} rotation={[0, 0, 0]} width={3} color="#ff4a3d" fontSize={0.22} />
+      <MapSign text="SECTOR 01" position={[-18.5, 2.95, -4.95]} rotation={[0, 0, 0]} width={2.2} color="#d9d0bd" background="#221913" />
+      <MapSign text="SECTOR 02" position={[18.5, 2.95, 4.95]} rotation={[0, Math.PI, 0]} width={2.2} color="#d9d0bd" background="#221913" />
+      <DirectionSign text="CATWALK" arrow="up" position={[-9, 2.25, -22.45]} rotation={[0, 0, 0]} color="#ff8a52" />
+      <DirectionSign text="SERVICE LANE" arrow="right" position={[22.45, 2.1, 6]} rotation={[0, -Math.PI / 2, 0]} color="#ffcf4d" />
+      <MapSign text="DANGER" position={[0, 1.85, 22.45]} rotation={[0, Math.PI, 0]} width={2.2} color="#ff4a3d" background="#190909" />
+      <FloorMarking text="MACHINE" position={[0, 0.04, -3.8]} width={5.5} depth={0.12} color="#ff8a52" opacity={0.52} />
+      <FloorMarking text="PIPE 02" position={[13.8, 0.04, -9.5]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} width={4.3} depth={0.1} color="#d9d0bd" opacity={0.5} />
+      <WarningStripe position={[-4.5, 0.06, -8.8]} width={4.2} />
+      <WarningStripe position={[4.5, 0.06, 8.8]} rotation={[-Math.PI / 2, 0, Math.PI]} width={4.2} />
+      <pointLight position={[0, 3.4, -21.8]} color="#ff8a52" intensity={0.32} distance={8} />
+      <pointLight position={[-12, 3.1, -6.2]} color="#ff4a3d" intensity={0.28} distance={6} />
     </group>
   );
 }

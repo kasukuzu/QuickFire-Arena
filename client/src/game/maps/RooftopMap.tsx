@@ -1,3 +1,9 @@
+import DirectionSign from '../mapDecor/DirectionSign';
+import FloorMarking from '../mapDecor/FloorMarking';
+import MapSign from '../mapDecor/MapSign';
+import NeonSign from '../mapDecor/NeonSign';
+import WarningStripe from '../mapDecor/WarningStripe';
+
 function Box({ position, size, color }: { position: [number, number, number]; size: [number, number, number]; color: string }) {
   return (
     <mesh castShadow receiveShadow position={position}>
@@ -53,10 +59,35 @@ export default function RooftopMap() {
       <Box position={[19, 1.05, -8]} size={[3.2, 2.1, 6]} color="#7c8788" />
       <Box position={[0, 0.75, -18]} size={[6, 1.5, 1.2]} color="#879092" />
       <Box position={[0, 0.75, 18]} size={[6, 1.5, 1.2]} color="#879092" />
+      <RooftopDecor />
 
       <ambientLight intensity={0.78} />
       <directionalLight position={[8, 14, 5]} intensity={1.65} color="#fff4d7" />
       <pointLight position={[0, 5, 0]} intensity={0.45} color="#dbefff" distance={24} />
+    </group>
+  );
+}
+
+function RooftopDecor() {
+  return (
+    <group>
+      <NeonSign text="ROOFTOP" position={[0, 2.55, -22.45]} rotation={[0, 0, 0]} width={3.5} color="#dbefff" fontSize={0.34} />
+      <MapSign text="AIR UNIT" position={[0, 3.05, -2.15]} rotation={[0, 0, 0]} width={2.2} color="#dbefff" background="#172025" />
+      <MapSign text="MAINTENANCE" position={[22.45, 2.05, 8]} rotation={[0, -Math.PI / 2, 0]} width={3.1} color="#7dd3fc" background="#101820" />
+      <MapSign text="ANTENNA" position={[-10, 4.25, 8]} rotation={[0, Math.PI / 2, 0]} width={2.2} color="#dbefff" background="#11191c" />
+      <NeonSign text="ZONE R" position={[-22.45, 2.25, -7]} rotation={[0, Math.PI / 2, 0]} width={2.2} color="#7dd3fc" fontSize={0.25} />
+      <MapSign text="NO ENTRY" position={[0, 2.05, 22.45]} rotation={[0, Math.PI, 0]} width={2.4} color="#ff6b4a" background="#190d0d" />
+      <DirectionSign text="EAST DECK" arrow="right" position={[8, 1.85, -22.45]} rotation={[0, 0, 0]} color="#dbefff" />
+      <DirectionSign text="SERVICE" arrow="left" position={[-8, 1.85, 22.45]} rotation={[0, Math.PI, 0]} color="#7dd3fc" />
+      <MapSign text="AC-04" position={[-6.2, 1.98, -4.38]} rotation={[0, 0, 0]} width={1.25} height={0.38} color="#f4f8f8" fontSize={0.18} />
+      <MapSign text="AC-09" position={[6.4, 1.98, 4.38]} rotation={[0, Math.PI, 0]} width={1.25} height={0.38} color="#f4f8f8" fontSize={0.18} />
+      <FloorMarking text="H" position={[0, 0.04, 0]} width={3.8} depth={0.12} color="#f4f8f8" opacity={0.58} />
+      <FloorMarking position={[0, 0.045, 0]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} width={3.8} depth={0.12} color="#f4f8f8" opacity={0.58} />
+      <FloorMarking text="ZONE R" position={[0, 0.04, -15.6]} width={5.5} depth={0.1} color="#7dd3fc" opacity={0.5} />
+      <WarningStripe position={[18.5, 0.06, -12]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} width={4} />
+      <WarningStripe position={[-18.5, 0.06, 12]} rotation={[-Math.PI / 2, 0, -Math.PI / 2]} width={4} />
+      <pointLight position={[0, 2.8, -21.8]} color="#dbefff" intensity={0.3} distance={8} />
+      <pointLight position={[-21.8, 2.5, -7]} color="#7dd3fc" intensity={0.25} distance={6} />
     </group>
   );
 }
