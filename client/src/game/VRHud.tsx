@@ -10,6 +10,8 @@ type Props = {
   player: PlayerState;
 };
 
+const SIDE_PANEL_YAW = THREE.MathUtils.degToRad(12);
+
 export default function VRHud({ snapshot, player }: Props) {
   const rootRef = useRef<THREE.Group>(null);
   const remaining = snapshot.matchEndsAt ? Math.max(0, snapshot.matchEndsAt - snapshot.serverTime) : 0;
@@ -31,10 +33,11 @@ export default function VRHud({ snapshot, player }: Props) {
 
   return (
     <group ref={rootRef}>
-      <HpPanel position={[-1.05, -0.55, -1.85]} hp={player.hp} hpRatio={hpRatio} hpColor={hpColor} />
+      <HpPanel position={[-1.05, -0.55, -1.85]} rotation={[0, SIDE_PANEL_YAW, 0]} hp={player.hp} hpRatio={hpRatio} hpColor={hpColor} />
       <TimerPanel position={[0, 0.5, -1.85]} label={`${minutes}:${seconds}`} />
       <AmmoPanel
         position={[1.05, -0.55, -1.85]}
+        rotation={[0, -SIDE_PANEL_YAW, 0]}
         weaponName={weapon?.name ?? '-'}
         ammo={`${player.ammo}/${weapon?.magazineSize ?? '-'}`}
         ammoRatio={ammoRatio}
@@ -47,17 +50,19 @@ export default function VRHud({ snapshot, player }: Props) {
 
 function HpPanel({
   position,
+  rotation = [0, 0, 0],
   hp,
   hpRatio,
   hpColor
 }: {
   position: [number, number, number];
+  rotation?: [number, number, number];
   hp: number;
   hpRatio: number;
   hpColor: string;
 }) {
   return (
-    <group position={position}>
+    <group position={position} rotation={rotation}>
       <CutPanel size={[0.52, 0.22]} cut={0.046} />
       <GlowText position={[-0.18, 0.038, 0.018]} fontSize={0.03} color="#d8f3ff" anchorX="left">
         HP
@@ -83,6 +88,7 @@ function TimerPanel({ position, label }: { position: [number, number, number]; l
 
 function AmmoPanel({
   position,
+  rotation = [0, 0, 0],
   weaponName,
   ammo,
   ammoRatio,
@@ -90,6 +96,7 @@ function AmmoPanel({
   reloadProgress
 }: {
   position: [number, number, number];
+  rotation?: [number, number, number];
   weaponName: string;
   ammo: string;
   ammoRatio: number;
@@ -98,7 +105,7 @@ function AmmoPanel({
 }) {
   const reloading = reloadProgress !== null;
   return (
-    <group position={position}>
+    <group position={position} rotation={rotation}>
       <CutPanel size={[0.56, 0.22]} cut={0.046} mirror />
       <GlowText position={[-0.19, 0.05, 0.018]} fontSize={0.03} color="#d8f3ff" anchorX="left">
         {reloading ? 'Reloading...' : weaponName}
