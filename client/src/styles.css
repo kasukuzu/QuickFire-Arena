@@ -696,12 +696,12 @@ td {
   flex-direction: column;
   justify-content: center;
   overflow: hidden;
-  border: 3px solid rgba(73, 98, 104, 0.55);
-  background: linear-gradient(180deg, rgba(188, 210, 214, 0.98), rgba(157, 185, 190, 0.98));
+  border: 2px solid rgba(73, 98, 104, 0.42);
+  background: linear-gradient(180deg, rgba(188, 210, 214, 0.3), rgba(157, 185, 190, 0.3));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
     inset 0 -10px 22px rgba(69, 102, 109, 0.12),
-    0 8px 18px rgba(0, 0, 0, 0.18);
+    0 6px 14px rgba(0, 0, 0, 0.14);
 }
 
 .match-hud-frame::before {
@@ -714,38 +714,38 @@ td {
 
 .match-hud-timer {
   align-items: center;
-  width: min(40vw, 610px);
-  min-width: 300px;
-  height: 128px;
-  padding: 8px 62px 18px;
+  width: min(32vw, 488px);
+  min-width: 240px;
+  height: 102px;
+  padding: 6px 50px 14px;
   clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 8% 100%, 0 70%);
 }
 
 .match-hud-status {
-  width: min(31vw, 465px);
-  min-width: 260px;
-  height: 210px;
-  padding: 34px 28px 24px;
+  width: min(25vw, 372px);
+  min-width: 208px;
+  height: 168px;
+  padding: 27px 22px 19px;
 }
 
 .match-hud-hp {
   align-items: flex-end;
-  padding-right: 30px;
+  padding-right: 24px;
   clip-path: polygon(0 0, 88% 0, 100% 24%, 100% 100%, 0 100%);
 }
 
 .match-hud-ammo {
   align-items: flex-end;
-  padding-right: 34px;
+  padding-right: 27px;
   clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%, 0 24%);
 }
 
 .match-hud-label {
   position: absolute;
-  top: 18px;
-  left: 28px;
-  color: rgba(17, 17, 17, 0.78);
-  font-size: 14px;
+  top: 14px;
+  left: 22px;
+  color: rgba(17, 17, 17, 0.88);
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -753,14 +753,14 @@ td {
 
 .match-hud-ammo .match-hud-label {
   left: auto;
-  right: 34px;
+  right: 27px;
 }
 
 .match-hud-value {
   position: relative;
   z-index: 1;
   color: #050505;
-  font-size: clamp(66px, 7vw, 96px);
+  font-size: clamp(52px, 5.6vw, 77px);
   font-weight: 500;
   line-height: 0.95;
   letter-spacing: 0;
@@ -768,17 +768,17 @@ td {
 }
 
 .match-hud-timer .match-hud-value {
-  font-size: clamp(58px, 6vw, 88px);
+  font-size: clamp(46px, 4.8vw, 70px);
 }
 
 .match-hud-gauge {
   position: relative;
   z-index: 1;
-  width: min(86%, 370px);
-  height: 40px;
-  margin-top: 24px;
+  width: min(86%, 296px);
+  height: 32px;
+  margin-top: 19px;
   overflow: hidden;
-  background: rgba(53, 69, 72, 0.25);
+  background: rgba(53, 69, 72, 0.34);
   clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
 }
 

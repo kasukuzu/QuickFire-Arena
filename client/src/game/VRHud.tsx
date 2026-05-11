@@ -31,10 +31,10 @@ export default function VRHud({ snapshot, player }: Props) {
 
   return (
     <group ref={rootRef}>
-      <HpPanel position={[-0.82, -0.43, -1.82]} hp={player.hp} hpRatio={hpRatio} hpColor={hpColor} />
-      <TimerPanel position={[0, 0.48, -1.82]} label={`${minutes}:${seconds}`} />
+      <HpPanel position={[-0.72, -0.38, -1.82]} hp={player.hp} hpRatio={hpRatio} hpColor={hpColor} />
+      <TimerPanel position={[0, 0.42, -1.82]} label={`${minutes}:${seconds}`} />
       <AmmoPanel
-        position={[0.82, -0.43, -1.82]}
+        position={[0.72, -0.38, -1.82]}
         weaponName={weapon?.name ?? '-'}
         ammo={`${player.ammo}/${weapon?.magazineSize ?? '-'}`}
         ammoRatio={ammoRatio}
@@ -58,14 +58,14 @@ function HpPanel({
 }) {
   return (
     <group position={position}>
-      <CutPanel size={[0.62, 0.26]} cut={0.055} />
-      <Text position={[-0.21, 0.045, 0.018]} fontSize={0.035} color="#111111" anchorX="left" anchorY="middle">
+      <CutPanel size={[0.52, 0.22]} cut={0.046} />
+      <Text position={[-0.18, 0.038, 0.018]} fontSize={0.03} color="#111111" anchorX="left" anchorY="middle">
         HP
       </Text>
-      <Text position={[0.2, 0.025, 0.018]} fontSize={0.1} color="#050505" anchorX="center" anchorY="middle">
+      <Text position={[0.17, 0.02, 0.018]} fontSize={0.084} color="#050505" anchorX="center" anchorY="middle">
         {hp}
       </Text>
-      <HudBar position={[0, -0.085, 0.018]} width={0.46} height={0.04} ratio={hpRatio} color={hpColor} />
+      <HudBar position={[0, -0.072, 0.018]} width={0.39} height={0.034} ratio={hpRatio} color={hpColor} />
     </group>
   );
 }
@@ -73,8 +73,8 @@ function HpPanel({
 function TimerPanel({ position, label }: { position: [number, number, number]; label: string }) {
   return (
     <group position={position}>
-      <CutPanel size={[0.66, 0.2]} cut={0.06} variant="timer" />
-      <Text position={[0, 0.012, 0.018]} fontSize={0.11} color="#050505" anchorX="center" anchorY="middle">
+      <CutPanel size={[0.56, 0.17]} cut={0.052} variant="timer" />
+      <Text position={[0, 0.01, 0.018]} fontSize={0.092} color="#050505" anchorX="center" anchorY="middle">
         {label}
       </Text>
     </group>
@@ -99,14 +99,14 @@ function AmmoPanel({
   const reloading = reloadProgress !== null;
   return (
     <group position={position}>
-      <CutPanel size={[0.66, 0.26]} cut={0.055} mirror />
-      <Text position={[-0.23, 0.058, 0.018]} fontSize={0.035} color="#111111" anchorX="left" anchorY="middle">
+      <CutPanel size={[0.56, 0.22]} cut={0.046} mirror />
+      <Text position={[-0.19, 0.05, 0.018]} fontSize={0.03} color="#111111" anchorX="left" anchorY="middle">
         {reloading ? 'Reloading...' : weaponName}
       </Text>
-      <Text position={[0.18, 0.02, 0.018]} fontSize={0.09} color="#050505" anchorX="center" anchorY="middle">
+      <Text position={[0.15, 0.016, 0.018]} fontSize={0.076} color="#050505" anchorX="center" anchorY="middle">
         {ammo}
       </Text>
-      <HudBar position={[0, -0.085, 0.018]} width={0.5} height={0.04} ratio={reloading ? reloadProgress : ammoRatio} color={reloading ? '#ffb45d' : ammoColor} mirror />
+      <HudBar position={[0, -0.072, 0.018]} width={0.42} height={0.034} ratio={reloading ? reloadProgress : ammoRatio} color={reloading ? '#ffb45d' : ammoColor} mirror />
     </group>
   );
 }
@@ -128,11 +128,11 @@ function CutPanel({
     <>
       <mesh position={[0, 0, -0.004]} renderOrder={50}>
         <shapeGeometry args={[backing]} />
-        <meshBasicMaterial color="#53666a" transparent opacity={0.96} depthTest={false} depthWrite={false} />
+        <meshBasicMaterial color="#53666a" transparent opacity={0.34} depthTest={false} depthWrite={false} />
       </mesh>
       <mesh position={[0, 0, 0]} renderOrder={51}>
         <shapeGeometry args={[shape]} />
-        <meshBasicMaterial color="#a9c1c6" transparent opacity={0.98} depthTest={false} depthWrite={false} />
+        <meshBasicMaterial color="#a9c1c6" transparent opacity={0.3} depthTest={false} depthWrite={false} />
       </mesh>
     </>
   );
