@@ -3,6 +3,7 @@ import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { MAPS } from './maps/mapDefinitions';
+import { VRLeftWristDisplay, VRWeaponAmmoDisplay } from './VRDiegeticHud';
 import { useWeaponSystem } from './WeaponSystem';
 import { PLAYER_HITBOXES } from './hitboxes';
 import { WEAPONS } from './weapons';
@@ -80,6 +81,7 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
 
   const weaponId = player.weaponId ?? 'ar';
   const weapon = WEAPONS[weaponId];
+  const remainingMs = snapshot.matchEndsAt ? Math.max(0, snapshot.matchEndsAt - snapshot.serverTime) : 0;
 
   useEffect(() => {
     gl.xr.enabled = true;
@@ -290,9 +292,20 @@ export default function VRSessionBridge({ player, snapshot, activeMapId, send, o
     <group ref={rigRef}>
       <primitive object={leftController} />
       <primitive object={rightController} />
-      <primitive object={leftGrip} />
+      <primitive object={leftGrip}>
+        <VRLeftWristDisplay hp={player.hp} maxHp={100} remainingMs={remainingMs} />
+      </primitive>
       <primitive object={rightGrip}>
-        <VRWeaponModel weaponId={weaponId} ads={weaponSystem.ads} recoil={weaponSystem.recoil} flashVisible={flashVisible} muzzleRef={muzzleRef} />
+        <VRWeaponModel
+          weaponId={weaponId}
+          ads={weaponSystem.ads}
+          recoil={weaponSystem.recoil}
+          flashVisible={flashVisible}
+          muzzleRef={muzzleRef}
+          ammo={player.ammo}
+          magazineSize={weapon.magazineSize}
+          isReloading={Boolean(player.reloadingUntil && player.reloadingUntil > snapshot.serverTime)}
+        />
       </primitive>
     </group>
   );
@@ -303,13 +316,19 @@ function VRWeaponModel({
   ads,
   recoil,
   flashVisible,
-  muzzleRef
+  muzzleRef,
+  ammo,
+  magazineSize,
+  isReloading
 }: {
   weaponId: keyof typeof WEAPONS;
   ads: boolean;
   recoil: number;
   flashVisible: boolean;
   muzzleRef: RefObject<THREE.Group | null>;
+  ammo: number;
+  magazineSize: number;
+  isReloading: boolean;
 }) {
   const weapon = WEAPONS[weaponId];
   const scale = weaponId === 'sr' ? 1.15 : weaponId === 'smg' ? 0.82 : 1;
@@ -339,6 +358,7 @@ function VRWeaponModel({
           <meshStandardMaterial color="#111414" roughness={0.7} />
         </mesh>
       ) : null}
+      <VRWeaponAmmoDisplay weaponId={weaponId} ammo={ammo} magazineSize={magazineSize} isReloading={isReloading} />
       <group ref={muzzleRef} position={[0, 0, muzzleZ]}>
         <mesh visible={flashVisible} scale={weapon.muzzleScale}>
           <sphereGeometry args={[0.07, 8, 8]} />

@@ -15,7 +15,6 @@ import WeaponModel from './WeaponModel';
 import PauseMenu from './ui/PauseMenu';
 import VRSessionBridge, { type VRDebugState } from './VRSessionBridge';
 import VRADSOverlay from './VRADSOverlay';
-import VRHud from './VRHud';
 import GameMap from './maps/GameMap';
 import type { ClientMessage, RoomSnapshot } from './types';
 
@@ -139,7 +138,6 @@ export default function GameCanvas({ playerId, snapshot, send, scoreboardOpen, o
             onDebugInput={setVrDebug}
           />
         ) : null}
-        {vrMode ? <VRHud snapshot={snapshot} player={me} /> : null}
         {vrMode ? <VRADSOverlay weaponId={me.weaponId} ads={vrAds} /> : null}
         {!vrMode ? (
           <>
