@@ -1,32 +1,78 @@
+<div id="top"></div>
+
 # QuickFire Arena
 
-ブラウザで遊べる、最大8人対応のリアルタイム3D FPSデスマッチのプロトタイプです。プレイヤーは名前を入力してルームを作成するか、5文字のルームコードを使って既存ルームに参加します。ロビーで武器とマップを選択して準備完了にすると、ホストがゲームを開始できます。
+<p>
+  <img src="https://img.shields.io/badge/Node.js-24+-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js 24以上">
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript 5.9">
+  <img src="https://img.shields.io/badge/React-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React 19">
+  <img src="https://img.shields.io/badge/Three.js-0.175-000000?style=for-the-badge&logo=three.js&logoColor=white" alt="Three.js 0.175">
+  <img src="https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 6">
+  <img src="https://img.shields.io/badge/WebSocket-ws-010101?style=for-the-badge&logo=socketdotio&logoColor=white" alt="WebSocket">
+</p>
 
-- クライアント: <https://quick-fire-arena-client.vercel.app>
-- WebSocketサーバー: <https://quickfire-arena.onrender.com>
+## 目次
 
-主な機能は、ルームの作成・参加、最大8人のリアルタイム対戦、武器選択、マップ投票、5分間のデスマッチ、リスポーン、体力回復アイテム、PC操作とWebXRによるVRモードです。
+1. [プロジェクトの概要](#プロジェクトの概要)
+2. [使用している主な技術](#使用している主な技術)
+3. [必要な環境](#必要な環境)
+4. [必要な環境変数やコマンド一覧](#必要な環境変数やコマンド一覧)
+5. [ディレクトリ構成](#ディレクトリ構成)
+6. [開発環境の構築方法](#開発環境の構築方法)
+7. [トラブルシューティング](#トラブルシューティング)
+
+## プロジェクトの概要
+
+QuickFire Arenaは、ブラウザで遊べる最大8人対応のリアルタイム3D FPSデスマッチです。名前を入力してルームを作成するか、5文字のルームコードを使って既存ルームに参加できます。ロビーで武器とマップを選択して全員が準備完了にすると、ホストがゲームを開始できます。
+
+### 主な機能
+
+- ルームコードによるルームの作成・参加
+- 最大8人のリアルタイム対戦
+- 武器選択とプレイヤーによるマップ投票
+- 5分間のデスマッチ、リスポーン、体力回復アイテム
+- PC向けのマウス・キーボード操作
+- WebXRによるVRモード
+
+### 公開環境
+
+| 対象 | URL |
+| --- | --- |
+| クライアント | <https://quick-fire-arena-client.vercel.app> |
+| WebSocketサーバー | <https://quickfire-arena.onrender.com> |
+
+<p align="right">(<a href="#top">トップへ</a>)</p>
 
 ## 使用している主な技術
 
-| 分類 | 技術 | 用途 |
-| --- | --- | --- |
-| フロントエンド | React 19 / TypeScript | 画面、ロビー、HUDなどのUI |
-| 3D描画 | Three.js / React Three Fiber / Drei | ゲーム空間、キャラクター、武器、エフェクトの描画 |
-| VR | WebXR | VRモードの表示と入力 |
-| ビルド・開発サーバー | Vite 6 | クライアントの開発と本番ビルド |
-| バックエンド | Node.js / TypeScript | ルームとゲーム進行の管理 |
-| リアルタイム通信 | WebSocket（`ws`） | プレイヤー状態とゲームイベントの同期 |
-| パッケージ管理 | npm workspaces | `client` と `server` の依存関係・スクリプト管理 |
+| 分類 | 技術 | バージョン | 用途 |
+| --- | --- | --- | --- |
+| ランタイム | Node.js | 24以上 | 開発ツールとWebSocketサーバーの実行 |
+| 言語 | TypeScript | 5.9.3 | クライアント・サーバーの型安全な実装 |
+| UI | React | 19.2.5 | 画面、ロビー、HUDなどのUI |
+| 3D描画 | Three.js | 0.175.0 | ゲーム空間や3Dモデルの描画 |
+| React向け3D描画 | React Three Fiber / Drei | 9.6.1 / 10.7.7 | Three.jsシーンのReactコンポーネント化 |
+| VR | WebXR | ブラウザ実装 | VRモードの表示と入力 |
+| ビルド・開発サーバー | Vite | 6.4.2 | クライアントの開発と本番ビルド |
+| リアルタイム通信 | `ws` | 8.20.0 | WebSocketによるゲーム状態の同期 |
+| パッケージ管理 | npm workspaces | npm 11以上を推奨 | `client` と `server` の依存関係・スクリプト管理 |
+
+上記は現在の `package-lock.json` に固定されているバージョンです。すべての依存パッケージは、各workspaceの `package.json` とルートの `package-lock.json` を参照してください。
+
+<p align="right">(<a href="#top">トップへ</a>)</p>
 
 ## 必要な環境
 
 - Node.js 24以上
-- npm
+- npm 11以上を推奨
 - WebGLに対応したモダンブラウザ
 - VRモードを利用する場合は、WebXR対応ブラウザとVRデバイス
 
-## 環境変数
+<p align="right">(<a href="#top">トップへ</a>)</p>
+
+## 必要な環境変数やコマンド一覧
+
+### 環境変数
 
 環境変数はどちらも任意です。未設定時はローカル開発用の既定値が使われます。
 
@@ -47,7 +93,7 @@ VITE_WS_URL=wss://quickfire-arena.onrender.com
 PORT=3000 npm run dev --workspace server
 ```
 
-## コマンド一覧
+### コマンド一覧
 
 リポジトリのルートで実行します。
 
@@ -60,6 +106,8 @@ PORT=3000 npm run dev --workspace server
 | `npm run dev --workspace client` | クライアントのみ起動 |
 | `npm run dev --workspace server` | サーバーのみ起動（ファイル変更を監視） |
 | `npm run start --workspace server` | ビルド済みサーバーを起動 |
+
+<p align="right">(<a href="#top">トップへ</a>)</p>
 
 ## ディレクトリ構成
 
@@ -94,6 +142,8 @@ QuickFire Arena/
 
 `client/dist/` と `server/dist/` は `npm run build` で生成される成果物です。
 
+<p align="right">(<a href="#top">トップへ</a>)</p>
+
 ## 開発環境の構築方法
 
 1. リポジトリをクローンし、プロジェクトのルートへ移動します。
@@ -127,6 +177,8 @@ QuickFire Arena/
 npm run typecheck
 npm run build
 ```
+
+<p align="right">(<a href="#top">トップへ</a>)</p>
 
 ## トラブルシューティング
 
@@ -173,3 +225,9 @@ node --version
 npm install
 npm run typecheck
 ```
+
+<p align="right">(<a href="#top">トップへ</a>)</p>
+
+## 参考資料
+
+- [全プロジェクトで重宝されるイケてるREADMEを作成しよう！](https://qiita.com/shun198/items/c983c713452c041ef787)
