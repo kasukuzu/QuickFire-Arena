@@ -3,7 +3,7 @@
 # QuickFire Arena
 
 <p>
-  <img src="https://img.shields.io/badge/Node.js-24+-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js 24以上">
+  <img src="https://img.shields.io/badge/Node.js-24.22.1%2B-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js 24系・24.22.1以降">
   <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript 5.9">
   <img src="https://img.shields.io/badge/React-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React 19">
   <img src="https://img.shields.io/badge/Three.js-0.175-000000?style=for-the-badge&logo=three.js&logoColor=white" alt="Three.js 0.175">
@@ -41,13 +41,15 @@ QuickFire Arenaは、ブラウザで遊べる最大8人対応のリアルタイ�
 | クライアント | <https://quick-fire-arena-client.vercel.app> |
 | WebSocketサーバー | <https://quickfire-arena.onrender.com> |
 
+Renderでは環境変数 `NODE_VERSION` でNode.jsのバージョンを指定します。現在の設定値は `24.22.1` です。変更後は「Save, rebuild, and deploy」で再ビルド・再デプロイしてください。
+
 <p align="right">(<a href="#top">トップへ</a>)</p>
 
 ## 使用している主な技術
 
 | 分類 | 技術 | バージョン | 用途 |
 | --- | --- | --- | --- |
-| ランタイム | Node.js | 24以上 | 開発ツールとWebSocketサーバーの実行 |
+| ランタイム | Node.js | 24系・24.22.1以降 | 開発ツールとWebSocketサーバーの実行 |
 | 言語 | TypeScript | 5.9.3 | クライアント・サーバーの型安全な実装 |
 | UI | React | 19.2.5 | 画面、ロビー、HUDなどのUI |
 | 3D描画 | Three.js | 0.175.0 | ゲーム空間や3Dモデルの描画 |
@@ -63,7 +65,7 @@ QuickFire Arenaは、ブラウザで遊べる最大8人対応のリアルタイ�
 
 ## 必要な環境
 
-- Node.js 24以上
+- Node.js 24系の24.22.1以降
 - npm 11以上を推奨
 - WebGLに対応したモダンブラウザ
 - VRモードを利用する場合は、WebXR対応ブラウザとVRデバイス
